@@ -1,0 +1,9 @@
+[package]
+name = "signed_token"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+poly1305 = "0.8"
+base-x = "0.2"   
+subtle = "2.6"    

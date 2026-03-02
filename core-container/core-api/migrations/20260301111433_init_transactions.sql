@@ -1,0 +1,24 @@
+create type tx_type as enum(
+    'create_user',
+    'transfer',
+    'stock-payment',
+    'moderation', -- blocks, warns and other logs
+    'zero' --other mutations where amount = 0
+);
+
+create table transactions(
+    id bigserial primary key,
+    sender_id bigint references users(id) on delete no action not null,
+    receiver_id bigint references users on delete no action not null,
+    amount bigint not null check(amount>=0),
+    executor bigint references executors(id) on delete no action not null,
+    data jsonb, -- additional data to transaction
+    type tx_type not null default 'transfer',
+    updated_at timestamptz not null default current_timestamp,
+    created_at timestamptz not null default current_timestamp
+);
+
+create trigger set_update_transaction before update on transactions
+    for each row execute function update_modified_column();
+create index idx_transactions_receiver_id on transactions(receiver_id);
+create index idx_transactions_sender_id on transactions(sender_id);

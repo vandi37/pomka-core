@@ -1,0 +1,12 @@
+create table user_tokens (
+    id bigserial primary key ,
+    user_id bigint references users(id) on delete cascade not null,
+    amount bigint, -- may be null
+    till timestamptz, -- may be null,
+    updated_at timestamptz not null default current_timestamp,
+    created_at timestamptz not null default current_timestamp
+);
+
+create trigger set_update_user_tokens before update on user_tokens
+    for each row execute function update_modified_column();
+create index idx_user_tokens_user on user_tokens(user_id);

@@ -1,0 +1,58 @@
+create type executor_type as enum (
+    'admin',
+    'bot',
+    'userbot'
+);
+
+create table executors(
+    id bigserial primary key,
+    executor_type executor_type not null,
+    admin bigint unique references admins(id) on delete cascade check (admin is null or executor_type='admin'),
+    bot bigint unique references bots(id) on delete cascade check (bot is null or executor_type='bot'),
+    userbot bigint unique references userbots(id) on delete cascade check(userbot is null or executor_type='userbot'),
+    updated_at timestamptz not null default current_timestamp,
+    created_at timestamptz not null default current_timestamp,
+    check ( admin is not null or bot is not null or userbot is not null )
+);
+
+create trigger set_update_executor before update on executors
+    for each row execute function update_modified_column();
+
+create function create_executor_for_admin() returns trigger AS $$
+begin
+    insert into executors(admin, executor_type)
+    values (NEW.id, 'admin');
+    return NEW;
+end;
+$$ language plpgsql;
+
+create trigger create_executor_admin
+    after insert on admins
+    for each row
+execute function create_executor_for_admin();
+
+create function create_executor_for_bot() returns trigger AS $$
+begin
+    insert into executors(bot, executor_type)
+    values (NEW.id, 'bot');
+    return NEW;
+end ;
+$$ language plpgsql;
+
+create trigger trigger_create_executor_bot
+    after insert on bots
+    for each row
+execute function create_executor_for_bot();
+
+create function create_executor_for_userbot() returns trigger AS $$
+begin
+    insert into executors(userbot, executor_type)
+    values (NEW.id, 'userbot');
+    return NEW;
+end ;
+$$ language plpgsql;
+
+create trigger trigger_create_executor_userbot
+    after insert on userbots
+    for each row
+execute function create_executor_for_userbot();

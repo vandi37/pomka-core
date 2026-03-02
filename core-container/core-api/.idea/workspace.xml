@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="caf93a3b-02da-4eb0-8dfa-cf571920fe3a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/sqlDataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301101922_updated_at_trigger.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301101931_init_admins.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301102000_init_bots.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301103402_init_users.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301110022_init_userbots.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301110245_init_executors.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301111433_init_transactions.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301112645_init_stocks.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301113705_init_user_tokens.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/20260301114250_init_global_config.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/signed_token/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/signed_token/src/lib.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/config.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/error.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/logger.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/admins.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/bots.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/executors.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/global_config.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/stocks.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/transactions.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/user_tokens.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/models/users.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/routes/middleware.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/routes/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../README.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Rust File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;vandi37&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/vandi37/pomka-core.git&quot;,
+    &quot;accountId&quot;: &quot;51c983aa-cbcd-4684-84ac-193033de8ae7&quot;
+  }
+}</component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="b3JeMV8W" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="3AL3WVwrWdcoQ3zC8h4AHVWJXCE" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Lev/OneDrive/Документы/Projects/pomka-core/core-container/core-api&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command" nameIsGenerated="true">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://myuser:secret@localhost:5432/mydb" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="run" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs>
+        <env name="DATABASE_URL" value="postgres://myuser:secret@localhost:5432/mydb" />
+      </envs>
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="caf93a3b-02da-4eb0-8dfa-cf571920fe3a" name="Changes" comment="" />
+      <created>1772358056447</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1772358056447</updated>
+      <workItem from="1772358057995" duration="8631000" />
+      <workItem from="1772442211056" duration="5316000" />
+      <workItem from="1772448394729" duration="202000" />
+      <workItem from="1772448606677" duration="32000" />
+      <workItem from="1772448641522" duration="62000" />
+      <workItem from="1772449412728" duration="257000" />
+      <workItem from="1772450330146" duration="16000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

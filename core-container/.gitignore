@@ -1,0 +1,5 @@
+*.exe
+*/target/
+*/Cargo.lock
+*/.env
+*/logs/
