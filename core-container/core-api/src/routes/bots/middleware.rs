@@ -9,11 +9,10 @@ use axum::{
 use sqlx::query;
 
 use crate::{
-    auth_prefix::AuthPrefix, error::AppError, routes::admins::Admin, state::AppState,
-    tokens::validate_jwt,
+    auth_prefix::AuthPrefix, error::AppError, routes::bots::Bot, state::AppState, tokens::validate_jwt
 };
 
-pub async fn admin_access(
+pub async fn bot_access(
     State(state): State<Arc<AppState>>,
     mut req: Request,
     next: Next,
@@ -25,23 +24,23 @@ pub async fn admin_access(
         .and_then(|auth| AuthPrefix::cut_prefix(auth))
         .ok_or_else(|| AppError::InvalidToken)?
     {
-        (AuthPrefix::AdminAccess, token) => {
-            let claims = validate_jwt::<()>(token, state.tokens_state.admins.access.as_bytes())
+        (AuthPrefix::BotAccess, token) => {
+            let claims = validate_jwt::<()>(token, state.tokens_state.bots.access.as_bytes())
                 .or(Err(AppError::InvalidToken))?;
-            query!("select id from admins where id=$1", claims.sub).fetch_optional(&state.db)
+            query!("select id from bots where id=$1", claims.sub).fetch_optional(&state.db)
             .await.or_else(|e| {
-                tracing::error!(target: "admin-auth", error=?e, id=claims.sub, "error selecting admin");
+                tracing::error!(target: "bots-auth", error=?e, id=claims.sub, "error selecting bot");
                 Err(AppError::Internal)
-            })?.ok_or(AppError::AminNotFound(claims.sub))?;
-            req.extensions_mut().insert(Admin { id: claims.sub });
-            tracing::info!(target:"admin-auth", id=claims.sub, "gotten access token from admin");
+            })?.ok_or(AppError::BotNotFound(claims.sub))?;
+            req.extensions_mut().insert(Bot { id: claims.sub });
+            tracing::info!(target:"bot-auth", id=claims.sub, "gotten access token from bot");
             Ok(next.run(req).await)
         }
         _ => Err(AppError::InvalidToken),
     }
 }
 
-pub async fn admin_refresh(
+pub async fn bot_refresh(
     State(state): State<Arc<AppState>>,
     mut req: Request,
     next: Next,
@@ -53,16 +52,16 @@ pub async fn admin_refresh(
         .and_then(|auth| AuthPrefix::cut_prefix(auth))
         .ok_or_else(|| AppError::InvalidToken)?
     {
-        (AuthPrefix::AdminRefresh, token) => {
-            let claims = validate_jwt::<()>(token, state.tokens_state.admins.refresh.as_bytes())
+        (AuthPrefix::BotRefresh, token) => {
+            let claims = validate_jwt::<()>(token, state.tokens_state.bots.refresh.as_bytes())
                 .or(Err(AppError::InvalidToken))?;
-            query!("select id from admins where id=$1", claims.sub).fetch_optional(&state.db)
+            query!("select id from bots where id=$1", claims.sub).fetch_optional(&state.db)
             .await.or_else(|e| {
-                tracing::error!(target: "admin-auth", error=?e, id=claims.sub, "error selecting admin");
+                tracing::error!(target: "bot-auth", error=?e, id=claims.sub, "error selecting bot");
                 Err(AppError::Internal)
-            })?.ok_or(AppError::AminNotFound(claims.sub))?;
-            req.extensions_mut().insert(Admin { id: claims.sub });
-            tracing::info!(target:"admin-auth", id=claims.sub, "gotten refresh token from admin");
+            })?.ok_or(AppError::BotNotFound(claims.sub))?;
+            req.extensions_mut().insert(Bot { id: claims.sub });
+            tracing::info!(target:"bot-auth", id=claims.sub, "gotten refresh token from bot");
             Ok(next.run(req).await)
         }
         _ => Err(AppError::InvalidToken),

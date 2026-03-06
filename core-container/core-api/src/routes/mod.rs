@@ -1,5 +1,6 @@
 mod middleware;
 mod admins;
+mod bots;
 
 use std::sync::Arc;
 
@@ -22,6 +23,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/ping", get(|| async { Json(json!("pong")) }))
         .nest("/admins/", admins::admins_router(state.clone()))
+        .nest("/bots/", bots::bots_router(state.clone()))
         .layer(cors)
         .layer(from_fn(logging))
         .with_state(state)

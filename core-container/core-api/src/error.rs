@@ -12,6 +12,7 @@ pub enum AppError {
     Internal,
     AdminUsernameTaken(String),
     AminNotFound(i64),
+    BotNotFound(i64),
 }
 
 #[derive(Serialize)]
@@ -64,6 +65,16 @@ impl IntoResponse for AppError {
                 Json(ResponseError{
                     code: StatusCode::NOT_FOUND.as_u16(),
                     message:"admin not found".into(),
+                    data: Map::from_iter([
+                        ("id".to_string(), Value::Number(Number::from(id)))
+                    ]),
+                })
+            ).into_response(),
+             Self::BotNotFound(id) => (
+                StatusCode::NOT_FOUND,
+                Json(ResponseError{
+                    code: StatusCode::NOT_FOUND.as_u16(),
+                    message:"bot not found".into(),
                     data: Map::from_iter([
                         ("id".to_string(), Value::Number(Number::from(id)))
                     ]),
