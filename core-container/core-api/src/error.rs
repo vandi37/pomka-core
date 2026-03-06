@@ -4,12 +4,14 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
-use serde_json::{Map, Value};
+use serde_json::{Map, Number, Value};
 
 pub enum AppError {
     InvalidToken,
     InvalidCredentials,
     Internal,
+    AdminUsernameTaken(String),
+    AminNotFound(i64),
 }
 
 #[derive(Serialize)]
@@ -45,6 +47,26 @@ impl IntoResponse for AppError {
                     code: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
                     message: "internal server error".into(),
                     data: Map::new()
+                })
+            ).into_response(),
+            Self::AdminUsernameTaken(username) => (
+                StatusCode::CONFLICT,
+                Json(ResponseError{
+                    code: StatusCode::CONFLICT.as_u16(),
+                    message: "admin username is taken".into(),
+                    data: Map::from_iter([
+                        ("username".to_string(), Value::String(username))
+                    ])
+                })
+            ).into_response(),
+            Self::AminNotFound(id) => (
+                StatusCode::NOT_FOUND,
+                Json(ResponseError{
+                    code: StatusCode::NOT_FOUND.as_u16(),
+                    message:"admin not found".into(),
+                    data: Map::from_iter([
+                        ("id".to_string(), Value::Number(Number::from(id)))
+                    ]),
                 })
             ).into_response()
         }

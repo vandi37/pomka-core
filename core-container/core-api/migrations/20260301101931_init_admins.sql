@@ -2,7 +2,7 @@ create table admins (
     id bigserial primary key,
     username text not null unique ,
     password text not null ,
-    creator bigint references admins(id) on delete set null, -- may be null
+    creator bigint references admins(id) on delete cascade, -- may be null
     updated_at timestamptz not null default current_timestamp,
     created_at timestamptz not null default current_timestamp
 );

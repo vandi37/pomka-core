@@ -28,38 +28,38 @@ async fn main() {
         .connect(&config.database_url)
         .await
         .unwrap_or_else(|e| {
-            tracing::error!("gotten error: {e}");
+            tracing::error!(target:"setup", "gotten error: {e}");
             exit(1)
         });
 
     let client = Client::open(config.redis_url).unwrap_or_else(|e| {
-        tracing::error!("gotten error: {e}");
+        tracing::error!(target:"setup", "gotten error: {e}");
         exit(1)
     });
 
     let redis = client.get_connection_manager().await.unwrap_or_else(|e| {
-        tracing::error!("gotten error: {e}");
+        tracing::error!(target:"setup","gotten error: {e}");
         exit(1)
     });
     let password_hasher_service = PasswordHasherService::new().unwrap_or_else(|e| {
-        tracing::error!("gotten error: {e}");
+        tracing::error!(target:"setup","gotten error: {e}");
         exit(1)
     });
     let password = password_hasher_service
         .hash_password(&config.admin.password)
         .unwrap_or_else(|e| {
-            tracing::error!("gotten error: {e}");
+            tracing::error!(target:"setup","gotten error: {e}");
             exit(1)
         });
     sqlx::query!(
         "insert into admins (username, password) values ($1, $2) on conflict (username) do update set password=$2",
         config.admin.username, password
     ).fetch_all(&db).await.unwrap_or_else(|e| {
-        tracing::error!("gotten error: {e}");
+        tracing::error!(target:"setup","gotten error: {e}");
         exit(1)
     });
     let tokens_state = TokensState::try_from(config.tokens).unwrap_or_else(|e| {
-        tracing::error!("gotten error: {e:?}");
+        tracing::error!(target:"setup","gotten error: {e:?}");
         exit(1);
     });
     let state = Arc::new(AppState {
@@ -72,7 +72,7 @@ async fn main() {
 
     let addr = SocketAddr::new(
         config.host.parse().unwrap_or_else(|e| {
-            tracing::error!("gotten error: {e}");
+            tracing::error!(target:"setup","gotten error: {e}");
             exit(1)
         }),
         config.port,
@@ -82,14 +82,14 @@ async fn main() {
         tokio::net::TcpListener::bind(addr)
             .await
             .unwrap_or_else(|e| {
-                tracing::error!("gotten error: {e}");
+                tracing::error!(target:"setup","gotten error: {e}");
                 exit(1)
             }),
         app,
     )
     .await
     .unwrap_or_else(|e| {
-        tracing::error!("gotten error: {e}");
+        tracing::error!(target:"setup","gotten error: {e}");
         exit(1)
     });
 }
