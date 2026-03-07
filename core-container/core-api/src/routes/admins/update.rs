@@ -6,31 +6,46 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+use serde::Deserialize;
 use sqlx::query_as;
 
 use crate::{
     error::AppError,
-    routes::admins::{Admin, InputAdmin, get::AdminRes},
+    routes::admins::{Admin, AdminRes},
     state::AppState,
 };
+
+#[derive(Deserialize, Clone)]
+pub struct UpdateAdmin {
+    pub username: Option<String>,
+    pub password: Option<String>,
+}
 
 pub async fn update_admin(
     State(state): State<Arc<AppState>>,
     Extension(admin): Extension<Admin>,
-    Json(login): Json<InputAdmin>,
+    Json(login): Json<UpdateAdmin>,
 ) -> Result<impl IntoResponse, AppError> {
-    let password = state.password_hasher_service.hash_password(&login.password)
+    if login.username.is_none() && login.password.is_none() {
+        Err(AppError::EmptyPatch)?
+    }
+    let password = login.password.and_then(|p| Some(state.password_hasher_service.hash_password(&p)
         .or_else(|e| {
-            tracing::error!(target: "update-admin", error=?e, username=login.username, id=admin.id, "gotten error while hashing admin password");
+            tracing::error!(target: "update-admin", error=?e, id=admin.id, "gotten error while hashing admin password");
             Err(AppError::Internal)
-    })?;
-    let res = query_as!(AdminRes, "update admins set username=$1, password=$2 where id=$3 returning id, username, creator, updated_at, created_at", login.username, password, admin.id)
+    }))).transpose()?;
+    let res = query_as!(AdminRes, r#"
+update admins 
+set
+    username=coalesce($1,username), 
+    password=coalesce($2,password) 
+where id=$3 returning id, username, creator, updated_at, created_at"#, login.username, password, admin.id)
         .fetch_one(&state.db)
         .await
-        .or_else(|e|match e {
-                sqlx::Error::Database(db_err) if db_err.is_unique_violation() => Err(AppError::AdminUsernameTaken(login.username.clone())),
-                e => {
-                    tracing::error!(target: "update-admin", error=?e, username=login.username, id=admin.id, "gotten error while updating admin");
+        .or_else(|e|match (e, login.username) {
+                (sqlx::Error::Database(db_err), Some(u)) if db_err.is_unique_violation() => Err(AppError::AdminUsernameTaken(u)),
+                (e, _) => {
+                    tracing::error!(target: "update-admin", error=?e, id=admin.id, "gotten error while updating admin");
                     Err(AppError::Internal)
                 }
     })?;

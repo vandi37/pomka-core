@@ -5,6 +5,7 @@ use axum::{
     middleware::from_fn_with_state,
     routing::{get, post},
 };
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::state::AppState;
@@ -12,7 +13,7 @@ mod create;
 mod delete;
 mod get;
 mod login;
-mod middleware;
+pub mod middleware;
 mod update;
 
 pub fn admins_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
@@ -29,7 +30,7 @@ pub fn admins_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
                 .route(
                     "/",
                     post(create::create)
-                        .put(update::update_admin)
+                        .patch(update::update_admin)
                         .get(get::get_admins),
                 )
                 .layer(from_fn_with_state(state.clone(), middleware::admin_access)),
@@ -45,4 +46,14 @@ pub struct Admin {
 pub struct InputAdmin {
     pub username: String,
     pub password: String,
+}
+
+
+#[derive(Serialize)]
+pub struct AdminRes {
+    pub id: i64,
+    pub username: String,
+    pub creator: Option<i64>,
+    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
 }

@@ -10,8 +10,10 @@ pub enum AppError {
     InvalidToken,
     InvalidCredentials,
     Internal,
+    EmptyPatch,
     AdminUsernameTaken(String),
     AminNotFound(i64),
+    BotUsernameTaken(String),
     BotNotFound(i64),
 }
 
@@ -50,6 +52,16 @@ impl IntoResponse for AppError {
                     data: Map::new()
                 })
             ).into_response(),
+            Self::EmptyPatch => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(
+                    ResponseError{
+                        code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                        message:"empty patch".into(),
+                        data: Map::new()
+                    }
+                )
+            ).into_response(),
             Self::AdminUsernameTaken(username) => (
                 StatusCode::CONFLICT,
                 Json(ResponseError{
@@ -68,6 +80,16 @@ impl IntoResponse for AppError {
                     data: Map::from_iter([
                         ("id".to_string(), Value::Number(Number::from(id)))
                     ]),
+                })
+            ).into_response(),
+             Self::BotUsernameTaken(username) => (
+                StatusCode::CONFLICT,
+                Json(ResponseError{
+                    code: StatusCode::CONFLICT.as_u16(),
+                    message: "bot username is taken".into(),
+                    data: Map::from_iter([
+                        ("username".to_string(), Value::String(username))
+                    ])
                 })
             ).into_response(),
              Self::BotNotFound(id) => (

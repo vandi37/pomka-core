@@ -1,11 +1,11 @@
-mod middleware;
-mod admins;
+pub mod middleware;
+pub mod admins;
 mod bots;
 
 use std::sync::Arc;
 
 use axum::{Json, Router, middleware::from_fn, routing::get};
-use serde::{Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tower_http::cors::{Any, CorsLayer};
 
@@ -16,6 +16,12 @@ use crate::{routes::middleware::logging, state::AppState};
 pub struct TokenResponse {
     pub id: i64,
     pub token: String
+}
+
+#[derive(Deserialize)]
+pub struct Params {
+    pub limit: i64,
+    pub offset: i64,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {

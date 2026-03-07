@@ -10,7 +10,7 @@ use sqlx::query_as;
 
 use crate::{
     error::AppError,
-    routes::admins::{Admin, InputAdmin, get::AdminRes},
+    routes::admins::{Admin, AdminRes, InputAdmin},
     state::AppState,
 };
 
