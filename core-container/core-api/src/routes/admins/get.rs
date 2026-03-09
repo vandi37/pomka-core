@@ -18,11 +18,11 @@ pub async fn get_admin(
     let res = query_as!(AdminRes, "select id, username, creator, updated_at, created_at from admins where id = $1", id)
         .fetch_optional(&state.db)
         .await
-        .or_else(|e| {
+        .map_err(|e| {
             tracing::error!(target:"get-admin", error=?e, id, by=admin.id, "gotten error while getting admin");
-            Err(AppError::Internal)
+            AppError::Internal
         })?
-        .ok_or(AppError::AminNotFound(id))?;
+        .ok_or(AppError::AdminNotFound(id))?;
     tracing::debug!(target:"get-admin", id, by=admin.id, "gotten admin");
 
     Ok((StatusCode::OK, Json(res)))
@@ -38,9 +38,9 @@ pub async fn get_admins(
     let admins = query_as!(AdminRes, "select id, username, creator, updated_at, created_at from admins order by id asc limit $1 offset $2", params.limit, params.offset)
         .fetch_all(&state.db)
         .await
-        .or_else(|e| {
-              tracing::error!(target:"get-admins", error=?e, by=admin.id, limit=params.limit, offset=params.offset, "gotten error while getting admins");
-            Err(AppError::Internal)
+        .map_err(|e| {
+            tracing::error!(target:"get-admins", error=?e, by=admin.id, limit=params.limit, offset=params.offset, "gotten error while getting admins");
+            AppError::Internal
         })?;
     tracing::debug!(target:"get-admin", by=admin.id, limit=params.limit, offset=params.offset, len=admins.len(), "gotten admins");
     Ok((StatusCode::OK, Json(admins)))

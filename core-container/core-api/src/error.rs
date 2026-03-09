@@ -12,7 +12,7 @@ pub enum AppError {
     Internal,
     EmptyPatch,
     AdminUsernameTaken(String),
-    AminNotFound(i64),
+    AdminNotFound(i64),
     BotUsernameTaken(String),
     BotNotFound(i64),
 }
@@ -72,7 +72,7 @@ impl IntoResponse for AppError {
                     ])
                 })
             ).into_response(),
-            Self::AminNotFound(id) => (
+            Self::AdminNotFound(id) => (
                 StatusCode::NOT_FOUND,
                 Json(ResponseError{
                     code: StatusCode::NOT_FOUND.as_u16(),

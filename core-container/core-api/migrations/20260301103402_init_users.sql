@@ -8,8 +8,7 @@ create type user_role as enum(
 );
 create type notify_level as enum(
     'no',
-    'token-only',
-    'important-only',
+    'default',
     'all'
 );
 
@@ -18,7 +17,7 @@ create table users (
     name text not null,
     balance bigint not null default 0,
     role user_role default 'user' not null ,
-    notify_level notify_level default 'important-only' not null,
+    notify_level notify_level default 'default' not null,
     updated_at timestamptz not null default current_timestamp,
     created_at timestamptz not null default current_timestamp,
     check (balance >= 0 or id = 0 ) -- allow for the pool to be negative

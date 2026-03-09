@@ -20,16 +20,16 @@ pub fn admins_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .route(
             "/refresh",
-            get(login::refresh)
+            get(login::refresh_admin)
                 .route_layer(from_fn_with_state(state.clone(), middleware::admin_refresh)),
         )
-        .route("/login", post(login::login))
+        .route("/login", post(login::login_admin))
         .merge(
             Router::new()
                 .route("/{id}", get(get::get_admin).delete(delete::delete_admin))
                 .route(
                     "/",
-                    post(create::create)
+                    post(create::create_admin)
                         .patch(update::update_admin)
                         .get(get::get_admins),
                 )

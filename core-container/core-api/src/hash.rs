@@ -1,9 +1,7 @@
-// src/password.rs
 use argon2::{
     Algorithm, Argon2, Params, Version,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
-use rand_core::OsRng;
 
 #[derive(Clone)]
 pub struct PasswordHasherService {
@@ -25,7 +23,7 @@ impl PasswordHasherService {
     }
 
     pub fn hash_password(&self, password: &str) -> Result<String, argon2::password_hash::Error> {
-        let salt = SaltString::generate(&mut OsRng);
+        let salt = SaltString::generate(&mut rand_core::OsRng);
 
         self.argon2
             .hash_password(password.as_bytes(), &salt)

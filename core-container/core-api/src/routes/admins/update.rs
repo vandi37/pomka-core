@@ -30,9 +30,9 @@ pub async fn update_admin(
         Err(AppError::EmptyPatch)?
     }
     let password = login.password.and_then(|p| Some(state.password_hasher_service.hash_password(&p)
-        .or_else(|e| {
+        .map_err(|e| {
             tracing::error!(target: "update-admin", error=?e, id=admin.id, "gotten error while hashing admin password");
-            Err(AppError::Internal)
+            AppError::Internal
     }))).transpose()?;
     let res = query_as!(AdminRes, r#"
 update admins 
@@ -42,11 +42,11 @@ set
 where id=$3 returning id, username, creator, updated_at, created_at"#, login.username, password, admin.id)
         .fetch_one(&state.db)
         .await
-        .or_else(|e|match (e, login.username) {
-                (sqlx::Error::Database(db_err), Some(u)) if db_err.is_unique_violation() => Err(AppError::AdminUsernameTaken(u)),
+        .map_err(|e|match (e, login.username) {
+                (sqlx::Error::Database(db_err), Some(u)) if db_err.is_unique_violation() => AppError::AdminUsernameTaken(u),
                 (e, _) => {
                     tracing::error!(target: "update-admin", error=?e, id=admin.id, "gotten error while updating admin");
-                    Err(AppError::Internal)
+                    AppError::Internal
                 }
     })?;
     tracing::info!(target: "update-admin", username=res.username, id=res.id, "updated user");

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-tokio = { version = "1.49", features = ["full"] }
+tokio = { version = "1.50", features = ["full"] }
 axum = "0.8.8"
 sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres",  "chrono", "macros"] }
 redis = {version = "1.0.4", features = ["tokio-comp", "connection-manager"] }
@@ -21,4 +21,4 @@ tower-http = { version = "0.6.8", features = ["trace", "cors"] }
 jsonwebtoken = {version = "10.3.0", features = ["rust_crypto"]}
 signed_token = {path="signed_token"}
 argon2 = "0.5"
-rand_core = "0.6"
+rand_core = "0.6.0"

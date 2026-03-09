@@ -14,25 +14,25 @@ use crate::{
     state::AppState,
 };
 
-pub async fn create(
+pub async fn create_admin(
     State(state): State<Arc<AppState>>,
     Extension(admin): Extension<Admin>,
     Json(login): Json<InputAdmin>,
 ) -> Result<impl IntoResponse, AppError> {
     let password = state.password_hasher_service.hash_password(&login.password)
-        .or_else(|e| {
+        .map_err(|e| {
             tracing::error!(target: "create-admin", error=?e, username=login.username, creator=admin.id, "gotten error while hashing admin password");
-            Err(AppError::Internal)
+            AppError::Internal
     })?;
     let res = query_as!(AdminRes ,"insert into admins (username, password, creator) values ($1, $2, $3) returning id, username, creator, updated_at, created_at",
         login.username, password, admin.id)
         .fetch_one(&state.db)
         .await
-        .or_else(|e| match e {
-                sqlx::Error::Database(db_err) if db_err.is_unique_violation() => Err(AppError::AdminUsernameTaken(login.username.clone())),
+        .map_err(|e| match e {
+                sqlx::Error::Database(db_err) if db_err.is_unique_violation() => AppError::AdminUsernameTaken(login.username.clone()),
                 e => {
                     tracing::error!(target: "create-admin", error=?e, username=login.username, creator=admin.id, "gotten error while creating admin");
-                    Err(AppError::Internal)
+                    AppError::Internal
                 }
             }
         )?;

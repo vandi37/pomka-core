@@ -17,12 +17,12 @@ pub async fn delete_admin(
     let res = query!("delete from admins where id = $1", id)
         .execute(&state.db)
         .await
-        .or_else(|e| {
+        .map_err(|e| {
             tracing::error!(target:"delete-admin", error=?e, id, by=admin.id, "gotten error while deleting admin");
-            Err(AppError::Internal)
+            AppError::Internal
         })?;
-    if res.rows_affected() != 1 {
-        Err(AppError::AminNotFound(id))?
+    if res.rows_affected() == 0 {
+        Err(AppError::AdminNotFound(id))?
     }
     tracing::info!(target:"delete-admin", id, by=admin.id, "deleted admin");
     Ok(StatusCode::NO_CONTENT)

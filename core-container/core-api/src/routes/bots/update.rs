@@ -21,7 +21,7 @@ pub struct UpdateBot {
     pub allow_produce_stocks: Option<bool>,
 }
 
-pub async fn update(
+pub async fn update_bot(
     State(state): State<Arc<AppState>>,
     Extension(admin): Extension<Admin>,
     Path(id): Path<i64>,
@@ -31,9 +31,9 @@ pub async fn update(
         Err(AppError::EmptyPatch)?
     }
     let password = bot.password.and_then(|p| Some(state.password_hasher_service.hash_password(&p)
-        .or_else(|e| {
+        .map_err(|e| {
             tracing::error!(target: "update-bot", error=?e, id, by=admin.id, "gotten error while hashing bot password");
-            Err(AppError::Internal)
+            AppError::Internal
     }))).transpose()?;
     let res = query_as!(BotRes ,r#"
 update bots
@@ -46,11 +46,11 @@ returning id, username, creator, allow_produce_stocks, updated_at, created_at"#,
         bot.username, password, bot.allow_produce_stocks, id)
         .fetch_optional(&state.db)
         .await
-        .or_else(|e| match (e, bot.username) {
-               (sqlx::Error::Database(db_err), Some(u)) if db_err.is_unique_violation() => Err(AppError::BotUsernameTaken(u)),
+        .map_err(|e| match (e, bot.username) {
+               (sqlx::Error::Database(db_err), Some(u)) if db_err.is_unique_violation() => AppError::BotUsernameTaken(u),
                 (e, _) => {
                     tracing::error!(target: "update-bot", error=?e, creator=admin.id, "gotten error while updating bot");
-                    Err(AppError::Internal)
+                    AppError::Internal
                 }
             }
         )?

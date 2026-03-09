@@ -17,11 +17,11 @@ pub async fn delete_bot(
     let res = query!("delete from bots where id = $1", id)
         .execute(&state.db)
         .await
-        .or_else(|e| {
+        .map_err(|e| {
             tracing::error!(target:"delete-bot", error=?e, id, by=admin.id, "gotten error while deleting bot");
-            Err(AppError::Internal)
+            AppError::Internal
         })?;
-    if res.rows_affected() != 1 {
+    if res.rows_affected() == 0 {
         Err(AppError::BotNotFound(id))?
     }
     tracing::info!(target:"delete-bot", id, by=admin.id, "deleted bot");
