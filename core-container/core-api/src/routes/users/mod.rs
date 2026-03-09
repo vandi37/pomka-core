@@ -1,7 +1,8 @@
+use std::ops::RangeInclusive;
 use std::sync::Arc;
 
 use axum::{Router, middleware::from_fn_with_state, routing::post};
-
+pub const VALID_USER_NAME: RangeInclusive<usize> = 1..=64;
 use crate::{
     routes::{
         middleware::{access, adapter, map_executor},

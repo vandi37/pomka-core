@@ -17,6 +17,7 @@ pub enum AppError {
     BotUsernameTaken(String),
     BotNotFound(i64),
     UserbotNotFound(i64),
+    InvalidUserName(String)
 }
 
 #[derive(Serialize)]
@@ -120,6 +121,14 @@ impl IntoResponse for AppError {
                 }),
             )
                 .into_response(),
+            Self::InvalidUserName(name) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(ResponseError {
+                    code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                    message: "invalid user name".into(),
+                    data: Map::from_iter([("name".to_string(), Value::String(name))]),
+                }),
+            ).into_response()    
         }
     }
 }

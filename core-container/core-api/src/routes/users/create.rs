@@ -9,7 +9,7 @@ use axum::{
 use serde::Deserialize;
 use sqlx::{query, query_as};
 
-use crate::{error::AppError, models::users::User, routes::Executor, state::AppState};
+use crate::{error::AppError, models::users::User, routes::{Executor, users::VALID_USER_NAME}, state::AppState};
 
 #[derive(Deserialize, Clone)]
 pub struct CreateUser {
@@ -22,6 +22,9 @@ pub async fn create_user(
     Extension(executor): Extension<Executor>,
     Json(create): Json<CreateUser>,
 ) -> Result<impl IntoResponse, AppError> {
+    if !VALID_USER_NAME.contains(&create.name.len()) {
+        return Err(AppError::InvalidUserName(create.name))
+    }
     let mut tx = state.db.begin().await.map_err(|e|{
         tracing::error!(target: "create-user", error=?e, executor=executor.id, name=create.name, "gotten error while creating transaction");
         AppError::Internal
@@ -45,6 +48,6 @@ pub async fn create_user(
         AppError::Internal
     })?;
 
-    tracing::info!(target:"create-admin", executor=executor.id, id=res.id, name=res.name, "created new user");
+    tracing::debug!(target:"create-user", executor=executor.id, id=res.id, name=res.name, "created new user");
     Ok((StatusCode::CREATED, Json(res)))
 }
