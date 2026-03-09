@@ -6,5 +6,5 @@ create table userbots(
     created_at timestamptz not null default current_timestamp
 );
 create index on userbots(owner_id);
-create trigger set_update_userbotsbots before update on userbots
+create trigger set_update_userbots before update on userbots
     for each row execute function update_modified_column();
