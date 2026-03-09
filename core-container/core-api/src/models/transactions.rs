@@ -3,9 +3,7 @@ use sqlx::Type;
 #[derive(Debug, Clone, Copy, PartialEq, Type)]
 #[sqlx(type_name = "tx_type", rename_all = "kebab-case")]
 pub enum TxType {
-    CreateUser,
     Transfer,
-    StockPayment,
     Moderation,
     Zero,
 }

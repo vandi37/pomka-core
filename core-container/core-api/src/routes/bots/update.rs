@@ -18,7 +18,6 @@ use crate::{
 pub struct UpdateBot {
     pub username: Option<String>,
     pub password: Option<String>,
-    pub allow_produce_stocks: Option<bool>,
 }
 
 pub async fn update_bot(
@@ -27,7 +26,7 @@ pub async fn update_bot(
     Path(id): Path<i64>,
     Json(bot): Json<UpdateBot>,
 ) -> Result<impl IntoResponse, AppError> {
-    if bot.username.is_none() && bot.password.is_none() && bot.allow_produce_stocks.is_none() {
+    if bot.username.is_none() && bot.password.is_none() {
         Err(AppError::EmptyPatch)?
     }
     let password = bot.password.and_then(|p| Some(state.password_hasher_service.hash_password(&p)
@@ -39,11 +38,10 @@ pub async fn update_bot(
 update bots
 set
     username = coalesce($1, username), 
-    password = coalesce($2, password), 
-    allow_produce_stocks = coalesce($3, allow_produce_stocks)
-where id = $4
-returning id, username, creator, allow_produce_stocks, updated_at, created_at"#,
-        bot.username, password, bot.allow_produce_stocks, id)
+    password = coalesce($2, password)
+where id = $3
+returning id, username, creator, updated_at, created_at"#,
+        bot.username, password, id)
         .fetch_optional(&state.db)
         .await
         .map_err(|e| match (e, bot.username) {

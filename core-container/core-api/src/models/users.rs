@@ -15,8 +15,7 @@ pub enum UserRole {
 #[sqlx(type_name = "notify_level", rename_all = "kebab-case")]
 pub enum NotifyLevel {
     No,
-    TokenOnly,
-    ImportantOnly,
+    Default,
     All,
 }
 

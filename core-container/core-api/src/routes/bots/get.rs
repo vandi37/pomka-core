@@ -15,7 +15,7 @@ pub async fn get_bot(
     Extension(admin): Extension<Admin>,
     Path(id): Path<i64>,
 ) -> Result<impl IntoResponse, AppError> {
-    let bot = query_as!(BotRes, "select id, username, creator, allow_produce_stocks, updated_at, created_at from bots where id = $1", id)
+    let bot = query_as!(BotRes, "select id, username, creator, updated_at, created_at from bots where id = $1", id)
         .fetch_optional(&state.db)
         .await
         .map_err(|e| {
@@ -32,7 +32,7 @@ pub async fn get_bots(
     Extension(admin): Extension<Admin>,
     Query(params): Query<Params>,
 ) -> Result<impl IntoResponse, AppError> {
-    let bots = query_as!(BotRes, "select id, username, creator, allow_produce_stocks, updated_at, created_at from bots order by id asc limit $1 offset $2", params.limit, params.offset)
+    let bots = query_as!(BotRes, "select id, username, creator, updated_at, created_at from bots order by id asc limit $1 offset $2", params.limit, params.offset)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
