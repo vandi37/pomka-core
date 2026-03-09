@@ -3,8 +3,10 @@ create table user_tokens (
     user_id bigint references users(id) on delete cascade not null,
     amount bigint, -- may be null
     till timestamptz, -- may be null,
+    used bigint not null default 0,
     updated_at timestamptz not null default current_timestamp,
-    created_at timestamptz not null default current_timestamp
+    created_at timestamptz not null default current_timestamp,
+    check(amount is null or amount >= used)
 );
 
 create trigger set_update_user_tokens before update on user_tokens

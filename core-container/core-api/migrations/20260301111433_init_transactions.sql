@@ -21,6 +21,8 @@ create trigger set_update_transaction before update on transactions
 create index idx_transactions_receiver_id on transactions(receiver_id);
 create index idx_transactions_sender_id on transactions(sender_id);
 create index idx_transactions_executor on transactions(executor);
-
-create index idx_transactions_created_at
-on transactions(created_at desc);
+create index idx_transactions_created_at on transactions(created_at desc);
+create index idx_transactions_sender_created on transactions(sender_id, created_at desc);
+create index idx_transactions_receiver_created on transactions(receiver_id, created_at desc);
+create index idx_transactions_executor_created on transactions(executor, created_at desc);
+create index idx_transactions_type on transactions(type);

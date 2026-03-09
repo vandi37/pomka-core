@@ -20,7 +20,7 @@ create table users (
     check (
         balance >= 0
         or role = 'pool'
-    ) -- allow for the pool to be negative
+    )
 );
 
 create trigger set_update_users before
