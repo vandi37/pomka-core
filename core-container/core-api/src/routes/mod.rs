@@ -1,6 +1,7 @@
 pub mod middleware;
 pub mod admins;
 mod bots;
+mod users;
 
 use std::sync::Arc;
 
@@ -25,12 +26,18 @@ pub struct Params {
     pub offset: i64,
 }
 
+#[derive(Clone, Serialize)]
+pub struct Executor {
+    pub id: i64,
+}
+
 pub fn router(state: Arc<AppState>) -> Router {
     let cors: CorsLayer = CorsLayer::new().allow_origin(Any).allow_methods(Any);
     Router::new()
         .route("/ping", get(|| async { Json(json!("pong")) }))
         .nest("/admins/", admins::admins_router(state.clone()))
         .nest("/bots/", bots::bots_router(state.clone()))
+        .nest("/users/", users::users_router(state.clone()))
         .layer(cors)
         .layer(from_fn(logging))
         .with_state(state)

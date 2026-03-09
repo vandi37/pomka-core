@@ -7,6 +7,7 @@ mod routes;
 mod state;
 mod tokens;
 mod auth_prefix;
+mod userbot;
 
 use redis::Client;
 use std::{net::SocketAddr, process::exit, sync::Arc};

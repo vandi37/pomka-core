@@ -1,8 +1,16 @@
-use axum::{extract::{Request, State}, http::{HeaderName, response}, middleware::Next, response::Response};
-use chrono::{DateTime, Utc};
+use axum::{
+    extract::{Request, State, Extension},
+    http::header::AUTHORIZATION,
+    middleware::Next,
+    response::Response,
+};
+use chrono::Utc;
+use sqlx::query;
 use std::{sync::Arc, time::Instant};
 
-use crate::{error::AppError, state::AppState};
+use crate::{
+    auth_prefix::AuthPrefix, error::AppError, models::executors::ExecutorRef, routes::Executor, state::AppState, tokens::validate_jwt, userbot::get_userbot
+};
 
 pub async fn logging(req: Request, next: Next) -> Response {
     let start = Instant::now();
@@ -24,10 +32,110 @@ pub async fn logging(req: Request, next: Next) -> Response {
 }
 pub const ADAPTER_TOKEN: &'static str = "X-Adapter-Token";
 
-pub async fn adapter(State(state): State<Arc<AppState>>, req: Request, next: Next) -> Result<Response, AppError> {
-    (Utc::now().timestamp() > state.tokens_state.adapter_tokens.verify(req.headers().get(ADAPTER_TOKEN)
-    .ok_or(AppError::InvalidAdapterToken)?
-    .to_str().ok().ok_or(AppError::InvalidAdapterToken)?).ok_or(AppError::InvalidAdapterToken)?
-    ).then_some(()).ok_or(AppError::InvalidAdapterToken)?;
+pub async fn adapter(
+    State(state): State<Arc<AppState>>,
+    req: Request,
+    next: Next,
+) -> Result<Response, AppError> {
+    (Utc::now().timestamp()
+        > state
+            .tokens_state
+            .adapter_tokens
+            .verify(
+                req.headers()
+                    .get(ADAPTER_TOKEN)
+                    .ok_or(AppError::InvalidAdapterToken)?
+                    .to_str()
+                    .ok()
+                    .ok_or(AppError::InvalidAdapterToken)?,
+            )
+            .ok_or(AppError::InvalidAdapterToken)?)
+    .then_some(())
+    .ok_or(AppError::InvalidAdapterToken)?;
+    Ok(next.run(req).await)
+}
+
+pub async fn access(
+    State(state): State<Arc<AppState>>,
+    mut req: Request,
+    next: Next,
+) -> Result<Response, AppError> {
+    match req
+        .headers()
+        .get(AUTHORIZATION)
+        .and_then(|auth| auth.to_str().ok())
+        .and_then(|auth| AuthPrefix::cut_prefix(auth))
+        .ok_or(AppError::InvalidToken)?
+    {
+        (AuthPrefix::AdminAccess, token) => {
+            let claims = validate_jwt::<()>(token, state.tokens_state.admins.access.as_bytes())
+                .or(Err(AppError::InvalidToken))?;
+            query!("select id from admins where id = $1", claims.sub).fetch_optional(&state.db)
+            .await.map_err(|e| {
+                tracing::error!(target: "auth", error=?e, id=claims.sub, "error selecting admin");
+                AppError::Internal
+            })?.ok_or(AppError::AdminNotFound(claims.sub))?;
+            req.extensions_mut().insert(ExecutorRef::Admin(claims.sub));
+            tracing::info!(target:"auth", id=claims.sub, "gotten access token from admin");
+            Ok(next.run(req).await)
+        }
+        (AuthPrefix::BotAccess, token) => {
+            let claims = validate_jwt::<()>(token, state.tokens_state.bots.access.as_bytes())
+                .or(Err(AppError::InvalidToken))?;
+            query!("select id from bots where id = $1", claims.sub).fetch_optional(&state.db)
+            .await.map_err(|e| {
+                tracing::error!(target: "auth", error=?e, id=claims.sub, "error selecting bot");
+                AppError::Internal
+            })?.ok_or(AppError::BotNotFound(claims.sub))?;
+            req.extensions_mut().insert(ExecutorRef::Bot(claims.sub));
+            tracing::info!(target:"auth", id=claims.sub, "gotten access token from bot");
+            Ok(next.run(req).await)
+        }
+        (AuthPrefix::Userbot, token ) => {
+            let (relevancy, id) = get_userbot(token, &state.tokens_state.userbots).ok_or(AppError::InvalidToken)?;
+            (query!("select relevancy from userbots where id = $1", id)
+                .fetch_optional(&state.db)
+                .await.map_err(|e| {
+                tracing::error!(target: "auth", error=?e, id, "error selecting userbot");
+                AppError::Internal
+            })?.ok_or(AppError::UserbotNotFound(id))?.relevancy == relevancy).then_some(()).ok_or(AppError::InvalidToken)?;
+            req.extensions_mut().insert(ExecutorRef::Userbot(id));
+            tracing::info!(target:"auth", id, "gotten token from userbot");
+            Ok(next.run(req).await)
+        }
+        _ => Err(AppError::InvalidToken),
+    }
+}
+
+
+pub async fn map_executor(
+    State(state): State<Arc<AppState>>,
+    Extension(executor): Extension<ExecutorRef>,
+    mut req: Request,
+    next: Next,
+) -> Result<Response, AppError> {
+    let id = match executor {
+        ExecutorRef::Admin(id) => query!("select id from executors where admin = $1", id)
+                .fetch_one(&state.db)
+                .await.map_err(|e| {
+                tracing::error!(target: "map-executor", error=?e, id, "error selecting executor by admin id");
+                AppError::Internal
+            })?.id,
+        ExecutorRef::Bot(id) => query!("select id from executors where bot = $1", id)
+                .fetch_one(&state.db)
+                .await.map_err(|e| {
+                tracing::error!(target: "map-executor", error=?e, id, "error selecting executor by bot id");
+                AppError::Internal
+            })?.id,
+        ExecutorRef::Userbot(id) => query!("select id from executors where admin = $1", id)
+                .fetch_one(&state.db)
+                .await.map_err(|e| {
+                tracing::error!(target: "map-executor", error=?e, id, "error selecting executor by userbot id");
+                AppError::Internal
+            })?.id,
+    };
+    req.extensions_mut().insert(Executor{
+    id
+    });
     Ok(next.run(req).await)
 }

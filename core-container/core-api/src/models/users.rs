@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
 use sqlx::Type;
 
-#[derive(Debug, Clone, Copy, PartialEq, Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Type, Serialize, Deserialize)]
 #[sqlx(type_name = "user_role", rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub enum UserRole {
     Pool,
     Blocked,
@@ -11,8 +13,9 @@ pub enum UserRole {
     Owner,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Type, Serialize, Deserialize)]
 #[sqlx(type_name = "notify_level", rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub enum NotifyLevel {
     No,
     Default,
@@ -22,7 +25,7 @@ pub enum NotifyLevel {
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
 
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, FromRow, Serialize)]
 pub struct User {
     pub id: i64,
     pub name: String,

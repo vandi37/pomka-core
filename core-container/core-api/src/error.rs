@@ -16,6 +16,7 @@ pub enum AppError {
     AdminNotFound(i64),
     BotUsernameTaken(String),
     BotNotFound(i64),
+    UserbotNotFound(i64),
 }
 
 #[derive(Serialize)]
@@ -23,7 +24,7 @@ pub struct ResponseError {
     pub code: u16,
     pub message: String,
     #[serde(flatten)]
-    pub data: Map<String, Value>
+    pub data: Map<String, Value>,
 }
 
 impl IntoResponse for AppError {
@@ -31,86 +32,94 @@ impl IntoResponse for AppError {
         match self {
             Self::InvalidToken => (
                 StatusCode::UNAUTHORIZED,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::UNAUTHORIZED.as_u16(),
                     message: "invalid authorization provided".into(),
                     data: Map::new(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             Self::InvalidAdapterToken => (
                 StatusCode::UNAUTHORIZED,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::UNAUTHORIZED.as_u16(),
                     message: "invalid adapter authorization provided".into(),
                     data: Map::new(),
                 }),
-            ).into_response(),
+            )
+                .into_response(),
             Self::InvalidCredentials => (
-                  StatusCode::UNAUTHORIZED,
-                Json(ResponseError{
+                StatusCode::UNAUTHORIZED,
+                Json(ResponseError {
                     code: StatusCode::UNAUTHORIZED.as_u16(),
                     message: "invalid credentials".into(),
                     data: Map::new(),
-                })
-            ).into_response(),
+                }),
+            )
+                .into_response(),
             Self::Internal => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
                     message: "internal server error".into(),
-                    data: Map::new()
-                })
-            ).into_response(),
+                    data: Map::new(),
+                }),
+            )
+                .into_response(),
             Self::EmptyPatch => (
                 StatusCode::UNPROCESSABLE_ENTITY,
-                Json(
-                    ResponseError{
-                        code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
-                        message:"empty patch".into(),
-                        data: Map::new()
-                    }
-                )
-            ).into_response(),
+                Json(ResponseError {
+                    code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                    message: "empty patch".into(),
+                    data: Map::new(),
+                }),
+            )
+                .into_response(),
             Self::AdminUsernameTaken(username) => (
                 StatusCode::CONFLICT,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::CONFLICT.as_u16(),
                     message: "admin username is taken".into(),
-                    data: Map::from_iter([
-                        ("username".to_string(), Value::String(username))
-                    ])
-                })
-            ).into_response(),
+                    data: Map::from_iter([("username".to_string(), Value::String(username))]),
+                }),
+            )
+                .into_response(),
             Self::AdminNotFound(id) => (
                 StatusCode::NOT_FOUND,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::NOT_FOUND.as_u16(),
-                    message:"admin not found".into(),
-                    data: Map::from_iter([
-                        ("id".to_string(), Value::Number(Number::from(id)))
-                    ]),
-                })
-            ).into_response(),
-             Self::BotUsernameTaken(username) => (
+                    message: "admin not found".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
+            )
+                .into_response(),
+            Self::BotUsernameTaken(username) => (
                 StatusCode::CONFLICT,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::CONFLICT.as_u16(),
                     message: "bot username is taken".into(),
-                    data: Map::from_iter([
-                        ("username".to_string(), Value::String(username))
-                    ])
-                })
-            ).into_response(),
-             Self::BotNotFound(id) => (
+                    data: Map::from_iter([("username".to_string(), Value::String(username))]),
+                }),
+            )
+                .into_response(),
+            Self::BotNotFound(id) => (
                 StatusCode::NOT_FOUND,
-                Json(ResponseError{
+                Json(ResponseError {
                     code: StatusCode::NOT_FOUND.as_u16(),
-                    message:"bot not found".into(),
-                    data: Map::from_iter([
-                        ("id".to_string(), Value::Number(Number::from(id)))
-                    ]),
-                })
-            ).into_response()
+                    message: "bot not found".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
+            )
+                .into_response(),
+            Self::UserbotNotFound(id) => (
+                StatusCode::NOT_FOUND,
+                Json(ResponseError {
+                    code: StatusCode::NOT_FOUND.as_u16(),
+                    message: "userbot not found".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
+            )
+                .into_response(),
         }
     }
 }

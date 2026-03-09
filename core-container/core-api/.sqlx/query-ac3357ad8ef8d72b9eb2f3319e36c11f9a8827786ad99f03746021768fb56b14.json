@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into admins (username, password) values ($1, $2) on conflict (username) do update set password=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ac3357ad8ef8d72b9eb2f3319e36c11f9a8827786ad99f03746021768fb56b14"
+}

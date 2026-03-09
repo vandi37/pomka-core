@@ -12,7 +12,7 @@ pub enum ExecutorType {
 pub enum ExecutorRef {
     Admin(i64),
     Bot(i64),
-    UserBot(i64),
+    Userbot(i64),
 }
 
 use chrono::{DateTime, Utc};
@@ -34,7 +34,7 @@ impl Executor {
         match self.executor_type {
             ExecutorType::Admin => self.admin.map(|a| ExecutorRef::Admin(a)),
             ExecutorType::Bot => self.bot.map(|b| ExecutorRef::Bot(b)),
-            ExecutorType::Userbot => self.bot.map(|u| ExecutorRef::UserBot(u))
+            ExecutorType::Userbot => self.bot.map(|u| ExecutorRef::Userbot(u))
         }
     }
 }
