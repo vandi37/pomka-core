@@ -15,7 +15,8 @@ use crate::{routes::middleware::logging, state::AppState};
 #[derive(Clone, Serialize)]
 pub struct TokenResponse {
     pub id: i64,
-    pub token: String
+    pub token: String,
+    pub expr: i64
 }
 
 #[derive(Deserialize)]

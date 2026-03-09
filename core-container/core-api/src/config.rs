@@ -27,6 +27,7 @@ pub struct TokenConfig {
     pub bots_access: String,
     pub userbots: String,
     pub user_tokens: String,
+    pub adapter_tokens: String
 }
 impl Config {
     pub fn from_env() -> Self {
@@ -51,6 +52,7 @@ impl Config {
                 bots_access: get_env("SECRET_BOT_ACCESS", "bots access"),
                 userbots: get_env("SECRET_USERBOTS", "bebebebebebebebebebebebebebebebe"),
                 user_tokens: get_env("SECRET_USER_TOKENS", "bebebebebebebebebebebebebebebebe"),
+                adapter_tokens: get_env("SECRET_ADAPTER_TOKENS", "bebebebebebebebebebebebebebebebe"),
             },
         }
     }

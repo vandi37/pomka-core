@@ -28,7 +28,7 @@ pub async fn admin_access(
         (AuthPrefix::AdminAccess, token) => {
             let claims = validate_jwt::<()>(token, state.tokens_state.admins.access.as_bytes())
                 .or(Err(AppError::InvalidToken))?;
-            query!("select id from admins where id=$1", claims.sub).fetch_optional(&state.db)
+            query!("select id from admins where id = $1", claims.sub).fetch_optional(&state.db)
             .await.map_err(|e| {
                 tracing::error!(target: "admin-auth", error=?e, id=claims.sub, "error selecting admin");
                 AppError::Internal
@@ -56,7 +56,7 @@ pub async fn admin_refresh(
         (AuthPrefix::AdminRefresh, token) => {
             let claims = validate_jwt::<()>(token, state.tokens_state.admins.refresh.as_bytes())
                 .or(Err(AppError::InvalidToken))?;
-            query!("select id from admins where id=$1", claims.sub).fetch_optional(&state.db)
+            query!("select id from admins where id = $1", claims.sub).fetch_optional(&state.db)
             .await.map_err(|e| {
                 tracing::error!(target: "admin-auth", error=?e, id=claims.sub, "error selecting admin");
                 AppError::Internal

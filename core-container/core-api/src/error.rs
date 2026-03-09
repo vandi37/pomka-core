@@ -8,6 +8,7 @@ use serde_json::{Map, Number, Value};
 
 pub enum AppError {
     InvalidToken,
+    InvalidAdapterToken,
     InvalidCredentials,
     Internal,
     EmptyPatch,
@@ -34,7 +35,15 @@ impl IntoResponse for AppError {
                     code: StatusCode::UNAUTHORIZED.as_u16(),
                     message: "invalid authorization provided".into(),
                     data: Map::new(),
-                })
+                }),
+            ).into_response(),
+            Self::InvalidAdapterToken => (
+                StatusCode::UNAUTHORIZED,
+                Json(ResponseError{
+                    code: StatusCode::UNAUTHORIZED.as_u16(),
+                    message: "invalid adapter authorization provided".into(),
+                    data: Map::new(),
+                }),
             ).into_response(),
             Self::InvalidCredentials => (
                   StatusCode::UNAUTHORIZED,

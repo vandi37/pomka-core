@@ -15,6 +15,7 @@ pub struct TokensState {
     pub bots: JwtComplex,
     pub userbots: Signed,
     pub user_tokens: Signed,
+    pub adapter_tokens: Signed
 }
 
 #[derive(Clone)]
@@ -38,11 +39,12 @@ impl TryFrom<TokenConfig> for TokensState {
             },
             userbots: Signed::new(value.userbots).ok_or(InvalidSecretLength)?,
             user_tokens: Signed::new(value.user_tokens).ok_or(InvalidSecretLength)?,
+            adapter_tokens: Signed::new(value.adapter_tokens).ok_or(InvalidSecretLength)?
         })
     }
 }
 
-pub fn create_jwt<T: Serialize>(user_id: i64, data: T, secret: &[u8], add: Duration) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn create_jwt<T: Serialize>(user_id: i64, data: T, secret: &[u8], add: Duration) -> Result<(String, i64), jsonwebtoken::errors::Error> {
     let expiration = Utc::now()
         .add(add)
         .timestamp();
@@ -56,7 +58,7 @@ pub fn create_jwt<T: Serialize>(user_id: i64, data: T, secret: &[u8], add: Durat
         data,
     };
 
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret))
+    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret)).map(|s| (s, expiration))
 }
 pub fn validate_jwt<T: DeserializeOwned>(token: &str, secret: &[u8]) -> Result<Claims<T>, jsonwebtoken::errors::Error> {
     let mut validation = Validation::new(Algorithm::default());

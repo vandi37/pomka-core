@@ -38,7 +38,7 @@ pub async fn login_bot(
         .then_some(bot)
         .ok_or(AppError::Internal))
     .ok_or( AppError::InvalidCredentials)??;
-    let token =
+    let (token, expr) =
         create_jwt(bot.id, (), state.tokens_state.bots.refresh.as_bytes(), Duration::days(7)).map_err(|e| {
             tracing::error!(target: "bot-login", error=?e, username=login.username, id=bot.id, "gotten error while creating bot jwt");
             AppError::Internal
@@ -48,7 +48,7 @@ pub async fn login_bot(
         StatusCode::OK,
         Json(TokenResponse {
             id: bot.id,
-            token,
+            token, expr
         }),
     ))
 }
@@ -57,7 +57,7 @@ pub async fn refresh_bot(
     State(state): State<Arc<AppState>>,
     Extension(bot): Extension<Bot>,
 ) -> Result<impl IntoResponse, AppError> {
-    let token =
+    let (token, expr) =
         create_jwt(bot.id, (), state.tokens_state.bots.access.as_bytes(), Duration::hours(1)).map_err(|e| {
             tracing::error!(target: "bot-refresh", error=?e, id=bot.id, "gotten error while creating access token for bot");
             AppError::Internal
@@ -67,7 +67,7 @@ pub async fn refresh_bot(
         StatusCode::OK,
         Json(TokenResponse {
             id: bot.id,
-            token,
+            token, expr
         }),
     ))
 }

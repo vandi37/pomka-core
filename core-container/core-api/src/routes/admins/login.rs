@@ -38,7 +38,7 @@ pub async fn login_admin(
         .then_some(admin)
         .ok_or(AppError::Internal))
     .ok_or(AppError::InvalidCredentials)??;
-    let token =
+    let (token, expr) =
         create_jwt(admin.id, (), state.tokens_state.admins.refresh.as_bytes(), Duration::days(7)).map_err(|e| {
             tracing::error!(target: "admin-login", error=?e, username=login.username, id=admin.id, "gotten error while creating admin jwt");
             AppError::Internal
@@ -49,6 +49,7 @@ pub async fn login_admin(
         Json(TokenResponse {
             id: admin.id,
             token,
+            expr,
         }),
     ))
 }
@@ -57,7 +58,7 @@ pub async fn refresh_admin(
     State(state): State<Arc<AppState>>,
     Extension(admin): Extension<Admin>,
 ) -> Result<impl IntoResponse, AppError> {
-    let token =
+    let (token, expr) =
         create_jwt(admin.id, (), state.tokens_state.admins.access.as_bytes(), Duration::hours(1)).map_err(|e| {
             tracing::error!(target: "admin-refresh", error=?e, id=admin.id, "gotten error while creating access token for admin");
             AppError::Internal
@@ -67,7 +68,7 @@ pub async fn refresh_admin(
         StatusCode::OK,
         Json(TokenResponse {
             id: admin.id,
-            token,
+            token, expr
         }),
     ))
 }

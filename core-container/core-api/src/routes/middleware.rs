@@ -1,5 +1,8 @@
-use axum::{extract::Request, middleware::Next, response::Response};
-use std::time::Instant;
+use axum::{extract::{Request, State}, http::{HeaderName, response}, middleware::Next, response::Response};
+use chrono::{DateTime, Utc};
+use std::{sync::Arc, time::Instant};
+
+use crate::{error::AppError, state::AppState};
 
 pub async fn logging(req: Request, next: Next) -> Response {
     let start = Instant::now();
@@ -18,4 +21,13 @@ pub async fn logging(req: Request, next: Next) -> Response {
     }
 
     response
+}
+pub const ADAPTER_TOKEN: &'static str = "X-Adapter-Token";
+
+pub async fn adapter(State(state): State<Arc<AppState>>, req: Request, next: Next) -> Result<Response, AppError> {
+    (Utc::now().timestamp() > state.tokens_state.adapter_tokens.verify(req.headers().get(ADAPTER_TOKEN)
+    .ok_or(AppError::InvalidAdapterToken)?
+    .to_str().ok().ok_or(AppError::InvalidAdapterToken)?).ok_or(AppError::InvalidAdapterToken)?
+    ).then_some(()).ok_or(AppError::InvalidAdapterToken)?;
+    Ok(next.run(req).await)
 }
