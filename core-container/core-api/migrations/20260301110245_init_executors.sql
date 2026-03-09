@@ -12,7 +12,6 @@ create table executors(
     userbot bigint unique references userbots(id) on delete cascade check(userbot is null or executor_type='userbot'),
     updated_at timestamptz not null default current_timestamp,
     created_at timestamptz not null default current_timestamp,
-    check ( admin is not null or bot is not null or userbot is not null )
 );
 
 create trigger set_update_executor before update on executors
