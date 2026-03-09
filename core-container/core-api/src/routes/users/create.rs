@@ -29,7 +29,7 @@ pub async fn create_user(
         tracing::error!(target: "create-user", error=?e, executor=executor.id, name=create.name, "gotten error while creating transaction");
         AppError::Internal
     })?;
-    let res = query_as::<_, User>( "insert into users (name) values ($1) returning id, name, balance, notify_level, role, updated_at, created_at")
+    let res = query_as::<_, User>( "insert into users (name) values ($1) returning id, name, balance, role, notify_level, updated_at, created_at")
         .bind(&create.name)
         .fetch_one(tx.as_mut())
         .await

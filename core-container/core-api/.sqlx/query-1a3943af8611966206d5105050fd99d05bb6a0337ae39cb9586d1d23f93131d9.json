@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update global_config set control_pool = control_pool + $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1a3943af8611966206d5105050fd99d05bb6a0337ae39cb9586d1d23f93131d9"
+}

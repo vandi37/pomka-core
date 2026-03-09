@@ -8,6 +8,7 @@ mod state;
 mod tokens;
 mod auth_prefix;
 mod userbot;
+mod transactions;
 
 use redis::Client;
 use std::{net::SocketAddr, process::exit, sync::Arc};
@@ -33,15 +34,11 @@ async fn main() {
             exit(1)
         });
 
-    let client = Client::open(config.redis_url).unwrap_or_else(|e| {
+    let redis = Client::open(config.redis_url).unwrap_or_else(|e| {
         tracing::error!(target:"setup", "gotten error: {e}");
         exit(1)
     });
 
-    let redis = client.get_connection_manager().await.unwrap_or_else(|e| {
-        tracing::error!(target:"setup","gotten error: {e}");
-        exit(1)
-    });
     let password_hasher_service = PasswordHasherService::new().unwrap_or_else(|e| {
         tracing::error!(target:"setup","gotten error: {e}");
         exit(1)
