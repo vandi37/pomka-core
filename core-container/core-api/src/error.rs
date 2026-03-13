@@ -17,7 +17,11 @@ pub enum AppError {
     BotUsernameTaken(String),
     BotNotFound(i64),
     UserbotNotFound(i64),
-    InvalidUserName(String)
+    InvalidUserName(String),
+    ExecutorNotFound(i64),
+    UserNotFound(i64),
+    ExecutorForbidden(i64),
+    UserForbidden(i64),
 }
 
 #[derive(Serialize)]
@@ -128,7 +132,43 @@ impl IntoResponse for AppError {
                     message: "invalid user name".into(),
                     data: Map::from_iter([("name".to_string(), Value::String(name))]),
                 }),
-            ).into_response()    
+            ).into_response(),
+             Self::ExecutorNotFound(id) => (
+                StatusCode::NOT_FOUND,
+                Json(ResponseError {
+                    code: StatusCode::NOT_FOUND.as_u16(),
+                    message: "executor not found".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
+            )
+                .into_response(),
+             Self::UserNotFound(id) => (
+                StatusCode::NOT_FOUND,
+                Json(ResponseError {
+                    code: StatusCode::NOT_FOUND.as_u16(),
+                    message: "user not found".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
+            )
+                .into_response(),
+            Self::ExecutorForbidden(id) => (
+                StatusCode::FORBIDDEN,
+                Json(ResponseError {
+                    code: StatusCode::FORBIDDEN.as_u16(),
+                    message:"forbidden for executor".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))])
+                })
+            )
+                .into_response(),
+            Self::UserForbidden(id) => (
+                StatusCode::FORBIDDEN,
+                Json(ResponseError {
+                    code: StatusCode::FORBIDDEN.as_u16(),
+                    message:"forbidden for user".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))])
+                })
+            )
+                .into_response()
         }
     }
 }

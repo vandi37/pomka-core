@@ -15,8 +15,6 @@ use crate::{error::AppError, models::users::User, routes::{Executor, users::VALI
 pub struct CreateUser {
     pub name: String,
 }
-pub const CONTROL_POOL_ADDITION: i64 = 10_000;
-
 pub async fn create_user(
     State(state): State<Arc<AppState>>,
     Extension(executor): Extension<Executor>,
@@ -37,7 +35,7 @@ pub async fn create_user(
             tracing::error!(target: "create-user", error=?e, executor=executor.id, name=create.name, "gotten error while creating user");
             AppError::Internal
         })?;
-    query!("update global_config set control_pool = control_pool + $1", CONTROL_POOL_ADDITION)
+    query!("update global_config set control_pool = control_pool + $1", state.control_pool_addition)
         .execute(tx.as_mut())
         .await.map_err(|e|{
             tracing::error!(target: "create-user", error=?e, executor=executor.id, id=res.id, name=res.name, "gotten error while increasing control pool ");

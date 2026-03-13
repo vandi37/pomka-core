@@ -9,4 +9,5 @@ pub struct AppState {
     pub redis: Client,
     pub password_hasher_service: PasswordHasherService,
     pub tokens_state: TokensState,
+    pub control_pool_addition: i64,
 }

@@ -9,6 +9,7 @@ mod tokens;
 mod auth_prefix;
 mod userbot;
 mod transactions;
+mod services;
 
 use redis::Client;
 use std::{net::SocketAddr, process::exit, sync::Arc};
@@ -65,6 +66,7 @@ async fn main() {
         redis,
         password_hasher_service,
         tokens_state,
+        control_pool_addition: config.control_pool_addition,
     });
     let app = router(state);
 

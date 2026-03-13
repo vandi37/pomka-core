@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{PgPool, PgTransaction, Postgres, query, query_as};
 
-use crate::models::{executors::{ExecutorRow, ExecutorType}, transactions::Transaction, users::{NotifyLevel, User, UserRole}};
+use crate::{models::{executors::{ExecutorRow, ExecutorType}, transactions::Transaction, users::{NotifyLevel, User, UserRole}}, services::{executors, users}};
 
 pub struct Pay {
     pub sender: i64, 
@@ -34,27 +34,17 @@ pub async fn pay_tx<'a>(
     if pay.amount < 0 {
         return Err(TxError::NegativeAmount)
     }
-    let exec = query_as::<_, ExecutorRow>(
-        "select id, executor_type, admin, bot, userbot, updated_at, created_at from executors where id = $1"
-    )
-        .bind(pay.executor)
-        .fetch_optional(tx.as_mut())
+    let exec = executors::get_executor(tx.as_mut(),pay.executor)
         .await.map_err(TxError::Sqlx)?.ok_or(TxError::ExecutorNotFound(pay.executor))?;
     
-
-    let sender = query_as::<Postgres, User>(
-    "select id, name, balance, role, notify_level, updated_at, created_at from users where id = $1"
-)
-        .bind(pay.sender)
-        .fetch_optional(tx.as_mut())
-        .await.map_err(TxError::Sqlx)?.ok_or(TxError::UserNotFound(pay.sender))?;
-
-    let receiver = query_as::<Postgres, User>(
-        "select id, name, balance, role, notify_level, updated_at, created_at from users where id = $1"
-    )
-        .bind(pay.receiver)
-        .fetch_optional(tx.as_mut())
-        .await.map_err(TxError::Sqlx)?.ok_or(TxError::UserNotFound(pay.receiver))?;
+    let sender = users::get_user(tx.as_mut(), pay.sender)
+        .await
+        .map_err(TxError::Sqlx)?
+        .ok_or(TxError::UserNotFound(pay.sender))?;
+    let receiver = users::get_user(tx.as_mut(), pay.receiver)
+        .await
+        .map_err(TxError::Sqlx)?
+        .ok_or(TxError::UserNotFound(pay.receiver))?;
 
      if let Some(u) = exec.userbot {
         let userbot = query!("select id, owner_id from userbots where id = $1", u)

@@ -1,7 +1,10 @@
+
+use std::fmt::{Display};
+
 use serde::{Deserialize, Serialize};
 use sqlx::Type;
 
-#[derive(Debug, Clone, Copy, PartialEq, Type, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Type, Serialize, Deserialize, PartialOrd)]
 #[sqlx(type_name = "user_role", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum UserRole {
@@ -13,7 +16,20 @@ pub enum UserRole {
     Owner,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Type, Serialize, Deserialize)]
+impl Display for UserRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Pool => write!(f, "pool"),
+            Self::Blocked => write!(f, "blocked"),
+            Self::User => write!(f, "user"),
+            Self::Moderator => write!(f, "moderator"),
+            Self::Admin => write!(f, "admin"),
+            Self::Owner => write!(f, "owner")
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Type, Serialize, Deserialize, PartialOrd)]
 #[sqlx(type_name = "notify_level", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum NotifyLevel {
@@ -22,10 +38,20 @@ pub enum NotifyLevel {
     All,
 }
 
+impl Display for NotifyLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::No => write!(f, "no"),
+            Self::Default => write!(f, "default"),
+            Self::All => write!(f, "all")
+        }
+    }
+}
+
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
 
-#[derive(Debug, Clone, FromRow, Serialize)]
+#[derive( Clone, FromRow, Serialize)]
 pub struct User {
     pub id: i64,
     pub name: String,
