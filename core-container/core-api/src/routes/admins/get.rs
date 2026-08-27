@@ -8,7 +8,7 @@ use axum::{
 };
 use sqlx::query_as;
 
-use crate::{error::AppError, routes::{Params, admins::{Admin, AdminRes}}, state::AppState};
+use crate::{error::AppError, routes::{MAX_LIMIT, Params, admins::{Admin, AdminRes}}, state::AppState};
 
 pub async fn get_admin(
     State(state): State<Arc<AppState>>,
@@ -33,8 +33,10 @@ pub async fn get_admin(
 pub async fn get_admins(
     State(state): State<Arc<AppState>>,
     Extension(admin): Extension<Admin>,
-    Query(params): Query<Params>,
+    Query(mut params): Query<Params>,
 ) -> Result<impl IntoResponse, AppError> {
+    params.limit = params.limit.min(MAX_LIMIT).max(1);
+    params.offset = params.offset.max(1);
     let admins = query_as!(AdminRes, "select id, username, creator, updated_at, created_at from admins order by id asc limit $1 offset $2", params.limit, params.offset)
         .fetch_all(&state.db)
         .await

@@ -42,3 +42,5 @@ pub fn router(state: Arc<AppState>) -> Router {
         .layer(from_fn(logging))
         .with_state(state)
 }
+
+const MAX_LIMIT: i64 = 100;

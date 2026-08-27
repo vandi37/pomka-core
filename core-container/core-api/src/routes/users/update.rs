@@ -218,7 +218,13 @@ pub async fn update_user_role(
         AppError::Internal
     })?.ok_or(AppError::UserNotFound(role.id))?;
 
-    if role.role == UserRole::Pool || role.role >= by.role || by.role < UserRole::Moderator || user.role == UserRole::Pool || user.role >= by.role {
+    if executor_row.executor_type != ExecutorType::Admin &&
+         ( role.role == UserRole::Pool || 
+            role.role >= by.role || 
+            by.role < UserRole::Moderator || 
+            user.role == UserRole::Pool || 
+            user.role >= by.role
+        ) {
         Err(AppError::UserForbidden(by.id))?
     }
 

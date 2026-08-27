@@ -23,7 +23,7 @@ pub enum TxError{
     UserNotFound(i64),
     ExecutorNotFound(i64),
     InsufficientFunds,
-    Forbidden
+    Forbidden(i64)
 }
 
 pub async fn pay_tx<'a>(
@@ -51,11 +51,11 @@ pub async fn pay_tx<'a>(
         .fetch_one(tx.as_mut())
         .await.map_err(TxError::Sqlx)?;
         if userbot.owner_id != sender.id && !pay.allowed {
-            return Err(TxError::Forbidden)
+            return Err(TxError::Forbidden(exec.id))
         }
     };
     if exec.executor_type != ExecutorType::Admin && sender.role == UserRole::Pool {
-        return Err(TxError::Forbidden)
+        return Err(TxError::Forbidden(exec.id))
     }
     if sender.balance < pay.amount && sender.role != UserRole::Pool {
         return Err(TxError::InsufficientFunds)
@@ -65,6 +65,14 @@ pub async fn pay_tx<'a>(
     query!("update users set balance = balance + $1 where id = $2", pay.amount, pay.receiver)
         .execute(tx.as_mut()).await.map_err(TxError::Sqlx)?;
 
+    if receiver.role == UserRole::Pool {
+        query!("update global_config set control_pool = control_pool + $1", pay.amount)
+            .execute(tx.as_mut()).await.map_err(TxError::Sqlx)?;
+    }
+    if sender.role == UserRole::Pool {
+        query!("update global_config set control_pool = control_pool - $1", pay.amount)
+            .execute(tx.as_mut()).await.map_err(TxError::Sqlx)?;
+    }
     let res = query_as!(Transaction, r#"insert into transactions (sender_id, receiver_id, amount, executor, data, type)
         values ($1, $2, $3, $4, $5, $6)
         returning id, sender_id, receiver_id, amount, executor, data, type, updated_at, created_at"#,
@@ -75,6 +83,7 @@ pub async fn pay_tx<'a>(
         pay.data,
         pay.r#type
     ).fetch_one(tx.as_mut()).await.map_err(TxError::Sqlx)?;
+
     if sender.notify_level == NotifyLevel::All {
         publish_transaction(client, &res, sender.id).await?;
     }
