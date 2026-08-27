@@ -5,8 +5,9 @@ const path = require('path');
 
 const COMMENT_STYLES = {
     block: ['.js', '.ts', '.jsx', '.tsx', '.css', '.c', '.cpp', '.cs', '.go', '.java', '.php'],
-    hash: ['.py', '.sh', '.rb', '.pl', '.yaml', '.yml', '.dockerfile'],
-    xml: ['.html', '.xml', '.svg'],
+    hash: ['.py', '.sh', '.rb', '.pl', '.yaml', '.yml', '.dockerfile', '.toml'],
+    xml: ['.html', '.xml', '.svg',],
+    sql: ['.sql']
 };
 
 function wrapInComment(text, ext) {
@@ -18,6 +19,8 @@ function wrapInComment(text, ext) {
         return `${lines.map(l => `# ${l}`).join('\n')}\n\n`;
     } else if (COMMENT_STYLES.xml.includes(ext)) {
         return `<!--\n${lines.join('\n')}\n-->\n\n`;
+    } else if (COMMENT_STYLES.sql.includes(ext)) {
+        return `${lines.map(l => `-- ${l}`).join('\n')}\n\n`;
     }
     return `${lines.map(l => `// ${l}`).join('\n')}\n\n`;
 }
