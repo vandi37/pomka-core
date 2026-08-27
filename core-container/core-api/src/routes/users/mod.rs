@@ -6,23 +6,22 @@ use axum::{
     middleware::from_fn_with_state,
     routing::{get, patch, post},
 };
+use lazy_regex::{Lazy, Regex, lazy_regex};
 pub const VALID_USER_NAME: RangeInclusive<usize> = 1..=64;
+pub const VALID_USER_HANDLE: RangeInclusive<usize> = 3..=32;
+pub static USER_HANDLE_REGEX: Lazy<Regex> = lazy_regex!("^[a-z][a-z0-9-]*[a-z0-9]$"i);
+
 use crate::{
     routes::{
-        admins::middleware::admin_access,
-        middleware::{access, adapter, map_executor},
-        users::{
-            create::create_user,
-            get::{get_user, get_users, users_leaderboard},
-            update::{update_user_name, update_user_notify, update_user_role},
+        admins::middleware::admin_access, middleware::{access, adapter, map_executor}, users::{
+            create::create_user, delete::remove_user_handle, get::{get_user_dispatcher, get_users, users_leaderboard}, update::{update_user_handle, update_user_name, update_user_notify, update_user_role},
         },
-    },
-    state::AppState,
+    }, state::AppState,
 };
 mod create;
 mod get;
 mod update;
-
+mod delete;
 pub fn users_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .merge(
@@ -32,10 +31,11 @@ pub fn users_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
                     post(create_user).route_layer(from_fn_with_state(state.clone(), adapter)),
                 )
                 .route("/name", patch(update_user_name))
+                .route("/userhandle", patch(update_user_handle).delete(remove_user_handle))
                 .route("/notify", patch(update_user_notify))
                 .route("/role", patch(update_user_role))
                 .route("/leaderboard", get(users_leaderboard))
-                .route("/{id}", get(get_user))
+                .route("/{identifier}", get(get_user_dispatcher))
                 .layer(from_fn_with_state(state.clone(), map_executor))
                 .layer(from_fn_with_state(state.clone(), access)),
         )

@@ -10,20 +10,17 @@ pub struct PasswordHasherService {
 
 impl PasswordHasherService {
     pub fn new() -> Result<Self, argon2::password_hash::Error> {
-        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13,  Params::new(
-            128 * 1024,
-            3,
-            4,
-            None,
-        )?);
+        let argon2 = Argon2::new(
+            Algorithm::Argon2id,
+            Version::V0x13,
+            Params::new(128 * 1024, 3, 4, None)?,
+        );
 
-        Ok(Self {
-                    argon2,
-                })
+        Ok(Self { argon2 })
     }
 
     pub fn hash_password(&self, password: &str) -> Result<String, argon2::password_hash::Error> {
-        let salt = SaltString::generate(&mut rand_core::OsRng);
+        let salt = SaltString::generate(&mut rand::rngs::OsRng);
 
         self.argon2
             .hash_password(password.as_bytes(), &salt)

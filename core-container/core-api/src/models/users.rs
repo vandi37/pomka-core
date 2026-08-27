@@ -10,6 +10,7 @@ use sqlx::Type;
 pub enum UserRole {
     Pool,
     Blocked,
+    Deleted,
     User,
     Moderator,
     Admin,
@@ -21,6 +22,7 @@ impl Display for UserRole {
         match self {
             Self::Pool => write!(f, "pool"),
             Self::Blocked => write!(f, "blocked"),
+            Self::Deleted => write!(f, "deleted"),
             Self::User => write!(f, "user"),
             Self::Moderator => write!(f, "moderator"),
             Self::Admin => write!(f, "admin"),
@@ -54,7 +56,8 @@ use sqlx::FromRow;
 #[derive( Clone, FromRow, Serialize)]
 pub struct User {
     pub id: i64,
-    pub name: String,
+    pub name: Option<String>,
+    pub userhandle: Option<String>,
     pub balance: i64,
     pub role: UserRole,
     pub notify_level: NotifyLevel,

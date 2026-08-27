@@ -7,7 +7,7 @@ use axum::{
     response::IntoResponse,
 };
 use serde::Deserialize;
-use sqlx::{query, query_as};
+use sqlx::query_as;
 
 use crate::{error::AppError, models::users::User, routes::{Executor, users::VALID_USER_NAME}, state::AppState};
 
@@ -27,18 +27,12 @@ pub async fn create_user(
         tracing::error!(target: "create-user", error=?e, executor=executor.id, name=create.name, "gotten error while creating transaction");
         AppError::Internal
     })?;
-    let res = query_as::<_, User>( "insert into users (name) values ($1) returning id, name, balance, role, notify_level, updated_at, created_at")
+    let res = query_as::<_, User>( "insert into users (name) values ($1) returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
         .bind(&create.name)
         .fetch_one(tx.as_mut())
         .await
         .map_err(|e|{
             tracing::error!(target: "create-user", error=?e, executor=executor.id, name=create.name, "gotten error while creating user");
-            AppError::Internal
-        })?;
-    query!("update global_config set control_pool = control_pool + $1", state.control_pool_addition)
-        .execute(tx.as_mut())
-        .await.map_err(|e|{
-            tracing::error!(target: "create-user", error=?e, executor=executor.id, id=res.id, name=res.name, "gotten error while increasing control pool ");
             AppError::Internal
         })?;
     tx.commit().await.map_err(|e|{

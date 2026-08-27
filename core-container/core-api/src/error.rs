@@ -18,8 +18,10 @@ pub enum AppError {
     BotNotFound(i64),
     UserbotNotFound(i64),
     InvalidUserName(String),
+    InvalidUserHandle(String),
     ExecutorNotFound(i64),
     UserNotFound(i64),
+    UserNotFoundByHandle(String),
     ExecutorForbidden(i64),
     UserForbidden(i64),
 }
@@ -132,8 +134,18 @@ impl IntoResponse for AppError {
                     message: "invalid user name".into(),
                     data: Map::from_iter([("name".to_string(), Value::String(name))]),
                 }),
-            ).into_response(),
-             Self::ExecutorNotFound(id) => (
+            )
+                .into_response(),
+            Self::InvalidUserHandle(handle) => (
+                StatusCode::UNPROCESSABLE_ENTITY,
+                Json(ResponseError {
+                    code: StatusCode::UNPROCESSABLE_ENTITY.as_u16(),
+                    message: "invalid user handle".into(),
+                    data: Map::from_iter([("userhandle".to_string(), Value::String(handle))]),
+                }),
+            )
+                .into_response(),
+            Self::ExecutorNotFound(id) => (
                 StatusCode::NOT_FOUND,
                 Json(ResponseError {
                     code: StatusCode::NOT_FOUND.as_u16(),
@@ -142,7 +154,7 @@ impl IntoResponse for AppError {
                 }),
             )
                 .into_response(),
-             Self::UserNotFound(id) => (
+            Self::UserNotFound(id) => (
                 StatusCode::NOT_FOUND,
                 Json(ResponseError {
                     code: StatusCode::NOT_FOUND.as_u16(),
@@ -151,24 +163,33 @@ impl IntoResponse for AppError {
                 }),
             )
                 .into_response(),
+            Self::UserNotFoundByHandle(userhandle) => (
+                StatusCode::NOT_FOUND,
+                Json(ResponseError {
+                    code: StatusCode::NOT_FOUND.as_u16(),
+                    message: "user not found by handle".into(),
+                    data: Map::from_iter([("userhandle".to_string(), Value::String(userhandle))]),
+                }),
+            )
+                .into_response(),
             Self::ExecutorForbidden(id) => (
                 StatusCode::FORBIDDEN,
                 Json(ResponseError {
                     code: StatusCode::FORBIDDEN.as_u16(),
-                    message:"forbidden for executor".into(),
-                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))])
-                })
+                    message: "forbidden for executor".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
             )
                 .into_response(),
             Self::UserForbidden(id) => (
                 StatusCode::FORBIDDEN,
                 Json(ResponseError {
                     code: StatusCode::FORBIDDEN.as_u16(),
-                    message:"forbidden for user".into(),
-                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))])
-                })
+                    message: "forbidden for user".into(),
+                    data: Map::from_iter([("id".to_string(), Value::Number(Number::from(id)))]),
+                }),
             )
-                .into_response()
+                .into_response(),
         }
     }
 }

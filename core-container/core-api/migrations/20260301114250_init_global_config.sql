@@ -1,6 +1,5 @@
 create table global_config (
     id int primary key check (id = 1),
-    control_pool bigint default 0,
     updated_at timestamptz not null default current_timestamp
 );
 

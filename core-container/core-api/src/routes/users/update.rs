@@ -4,7 +4,7 @@ use axum::{Json, extract::{Extension, State}, response::IntoResponse};
 use serde::Deserialize;
 use sqlx::query_as;
 
-use crate::{error::AppError, models::{executors::ExecutorType, users::{NotifyLevel, User, UserRole}}, routes::{Executor, users::VALID_USER_NAME}, services::{executors::get_executor, users}, state::AppState};
+use crate::{error::AppError, models::{executors::ExecutorType, users::{NotifyLevel, User, UserRole}}, routes::{Executor, users::{USER_HANDLE_REGEX, VALID_USER_HANDLE, VALID_USER_NAME}}, services::{executors::get_executor, users}, state::AppState};
 
 #[derive(Clone, Deserialize)]
 pub struct UpdateName {
@@ -60,7 +60,7 @@ pub async fn update_user_name(
         Err(AppError::UserForbidden(by.id))?
     }
 
-    let res = query_as::<_, User>( "update users set name=$1 where id=$2 returning id, name, balance, role, notify_level, updated_at, created_at")
+    let res = query_as::<_, User>( "update users set name=$1 where id=$2 returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
         .bind(&name.name)
         .bind(name.id)
         .fetch_optional(tx.as_mut())
@@ -93,6 +93,97 @@ pub async fn update_user_name(
             "updated user name");
     Ok(Json(res))
 }
+
+#[derive(Clone, Deserialize)]
+pub struct UpdateHandle {
+    pub id: i64,
+    pub by: i64,
+    pub userhandle: String,
+}
+
+pub async fn update_user_handle(
+    State(state): State<Arc<AppState>>,
+    Extension(executor): Extension<Executor>,
+    Json(handle): Json<UpdateHandle>,
+) -> Result<impl IntoResponse, AppError> {
+    let mut tx = state.db.begin().await.map_err(|e|{
+       tracing::error!(target: "update-user-handle", 
+            error=?e, 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by, 
+            id=handle.id, 
+            "gotten error while creating transaction");
+        AppError::Internal
+    })?;
+    let executor_row = get_executor(tx.as_mut(), executor.id).await.map_err(|e| {
+        tracing::error!(target: "update-user-handle", 
+            error=?e, 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by,
+            id=handle.id, 
+            "gotten error while getting executor");
+        AppError::Internal
+    })?.ok_or(AppError::ExecutorNotFound(executor.id))?;
+
+    if executor_row.executor_type == ExecutorType::Userbot {
+        Err(AppError::ExecutorForbidden(executor_row.id))?
+    }
+    if !VALID_USER_HANDLE.contains(&handle.userhandle.len()) || USER_HANDLE_REGEX.is_match(&handle.userhandle){
+        return Err(AppError::InvalidUserHandle(handle.userhandle))
+    }
+    let by = users::get_user(tx.as_mut(), handle.by).await.map_err(|e|{
+        tracing::error!(target: "update-user-handle", 
+            error=?e, 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by,
+            id=handle.id,  
+            "gotten error while getting by-user");
+        AppError::Internal
+    })?.ok_or(AppError::UserNotFound(handle.by))?;
+
+    if by.role < UserRole::User || by.role < UserRole::Moderator && handle.by != handle.id {
+        Err(AppError::UserForbidden(by.id))?
+    }
+
+    let res = query_as::<_, User>( "update users set userhandle=$1 where id=$2 returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
+        .bind(&handle.userhandle)
+        .bind(handle.id)
+        .fetch_optional(tx.as_mut())
+        .await
+        .map_err(|e: sqlx::Error|{
+            tracing::error!(target: "update-user-handle", 
+            error=?e, 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by,
+            id=handle.id,  
+            "gotten error while updating user handle");
+        AppError::Internal
+        })?.ok_or(AppError::UserNotFound(handle.id))?;
+
+    tx.commit().await.map_err(|e|{
+        tracing::error!(target: "update-user-handle", 
+            error=?e, 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by,
+            id=handle.id,  
+            "gotten error while committing transaction");
+        AppError::Internal
+    })?;
+     tracing::debug!(target: "update-user-handle", 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by,
+            id=handle.id,  
+            "updated user handle");
+    Ok(Json(res))
+}
+
+
 
 #[derive(Clone, Deserialize)]
 pub struct UpdateNotify {
@@ -128,7 +219,7 @@ pub async fn update_user_notify(
         Err(AppError::ExecutorForbidden(executor_row.id))?
     }
 
-    let res = query_as::<_, User>( "update users set notify_level=$1 where id=$2 returning id, name, balance, role, notify_level, updated_at, created_at")
+    let res = query_as::<_, User>( "update users set notify_level=$1 where id=$2 returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
         .bind(&notify.level)
         .bind(notify.id)
         .fetch_optional(tx.as_mut())
@@ -207,7 +298,7 @@ pub async fn update_user_role(
         AppError::Internal
     })?.ok_or(AppError::UserNotFound(role.by))?;
 
-    let user = users::get_user(tx.as_mut(), role.id).await.map_err(|e|{
+    let user = users::get_user_for_update(tx.as_mut(), role.id).await.map_err(|e|{
         tracing::error!(target: "update-user-role", 
             error=?e, 
             executor=executor.id, 
@@ -228,7 +319,7 @@ pub async fn update_user_role(
         Err(AppError::UserForbidden(by.id))?
     }
 
-    let res = query_as::<_, User>( "update users set role=$1 where id=$2 returning id, name, balance, role, notify_level, updated_at, created_at")
+    let res = query_as::<_, User>( "update users set role=$1 where id=$2 returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
         .bind(&role.role)
         .bind(user.id)
         .fetch_one(tx.as_mut())
