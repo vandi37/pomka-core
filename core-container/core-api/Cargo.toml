@@ -20,6 +20,6 @@ tracing-error = "0.2"
 tower-http = { version = "0.7", features = ["trace", "cors"] }
 jsonwebtoken = {version = "11.0.0", features = ["rust_crypto"]}
 signed_token = {path="signed_token"}
-argon2 = "0.5"
-rand = "0.8"
+argon2 = "0.6.0"
+password-hash = "0.6.1"
 lazy-regex = "3.6.1"

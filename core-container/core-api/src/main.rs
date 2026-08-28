@@ -81,7 +81,7 @@ async fn main() {
         redis,
         password_hasher_service,
         tokens_state,
-        control_pool_addition: config.control_pool_addition,
+        daily_claim: config.daily_claim,
     });
     let app = router(state);
 

@@ -28,7 +28,7 @@ pub struct Config {
     pub logger: LoggerConfig,
     pub admin: AdminConfig,
     pub tokens: TokenConfig,
-    pub control_pool_addition: i64,
+    pub daily_claim: i64,
 }
 #[derive(Clone, Debug)]
 pub struct AdminConfig {
@@ -43,7 +43,7 @@ pub struct TokenConfig {
     pub bots_access: String,
     pub userbots: String,
     pub user_tokens: String,
-    pub adapter_tokens: String
+    pub adapter_tokens: String,
 }
 impl Config {
     pub fn from_env() -> Self {
@@ -70,7 +70,7 @@ impl Config {
                 user_tokens: get_env("SECRET_USER_TOKENS", "bebebebebebebebebebebebebebebebe"),
                 adapter_tokens: get_env("SECRET_ADAPTER_TOKENS", "bebebebebebebebebebebebebebebebe"),
             },
-            control_pool_addition: get_env("CONTROL_POOL_ADDITION", "1000000").parse().unwrap_or(1_000_000),
+            daily_claim: get_env("DAILY_CLAIM", "1000000").parse().unwrap_or(1_000_000),
         }
     }
 }
