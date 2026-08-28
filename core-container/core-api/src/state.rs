@@ -25,4 +25,5 @@ pub struct AppState {
     pub password_hasher_service: PasswordHasherService,
     pub tokens_state: TokensState,
     pub daily_claim: i64,
+    pub reset_hour_utc: u32,
 }

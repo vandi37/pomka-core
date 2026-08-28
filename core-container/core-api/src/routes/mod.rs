@@ -15,6 +15,7 @@
 
 pub mod admins;
 mod bots;
+mod claim_daily_reward;
 mod global_config;
 pub mod middleware;
 mod users;
@@ -24,7 +25,7 @@ use std::sync::Arc;
 use axum::{
     Json, Router,
     middleware::{from_fn, from_fn_with_state},
-    routing::get,
+    routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -32,8 +33,10 @@ use tower_http::cors::{Any, CorsLayer};
 
 use crate::{
     routes::{
-        global_config::get::get_fees, middleware::{access, logging, map_executor},
-    }, state::AppState,
+        global_config::get::get_fees,
+        middleware::{access, logging, map_executor},
+    },
+    state::AppState,
 };
 
 #[derive(Clone, Serialize)]
@@ -60,7 +63,15 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/ping", get(|| async { Json(json!("pong")) }))
         .nest("/admins/", admins::admins_router(state.clone()))
         .nest("/bots/", bots::bots_router(state.clone()))
-        .nest("/users/", users::users_router(state.clone()))
+        .nest(
+            "/users/",
+            users::users_router(state.clone()).route(
+                "/daily-reward",
+                post(claim_daily_reward::claim_daily_reward)
+                    .route_layer(from_fn_with_state(state.clone(), map_executor))
+                    .route_layer(from_fn_with_state(state.clone(), access)),
+            ),
+        )
         .nest(
             "/global-config/",
             global_config::global_config_router(state.clone()),

@@ -43,6 +43,7 @@ pub enum TxAllowance {
     NotAllowed, // or allowed as the userbot owner
 }
 
+#[derive( Debug)]
 pub enum TxError {
     Sqlx(sqlx::Error),
     NegativeAmount,
@@ -54,6 +55,7 @@ pub enum TxError {
     DuplicateIdempotencyKey,
 }
 
+#[derive(Debug)]
 pub enum SendingError {
     Redis(redis::RedisError),
     Serde(serde_json::Error),

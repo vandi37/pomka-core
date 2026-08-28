@@ -25,6 +25,7 @@ mod auth_prefix;
 mod userbot;
 mod transactions;
 mod services;
+mod claim_daily_reward;
 
 use redis::Client;
 use std::{net::SocketAddr, process::exit, sync::Arc};
@@ -82,6 +83,7 @@ async fn main() {
         password_hasher_service,
         tokens_state,
         daily_claim: config.daily_claim,
+        reset_hour_utc: config.reset_hour_utc,
     });
     let app = router(state);
 

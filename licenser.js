@@ -28,8 +28,8 @@ function wrapInComment(text, ext) {
 async function run() {
     const args = process.argv.slice(2);
     
-    let configPath = 'license.json';
-    let templatePath = 'license-header.txt';
+    let configPath = 'license-config/license.json';
+    let templatePath = 'license-config/header';
     let targetExts = [];
 
     for (let i = 0; i < args.length; i++) {

@@ -15,7 +15,7 @@
 
 
 
-use sqlx::{Executor, Postgres, query_as};
+use sqlx::{Executor, Postgres, query, query_as};
 
 use crate::{models::users::User};
 
@@ -44,4 +44,10 @@ pub async fn get_user_by_handle<'e>(executor: impl Executor<'e, Database = Postg
             .bind(userhandle)
             .fetch_optional(executor)
             .await
+}
+pub async fn get_pool_id<'e>(executor: impl Executor<'e, Database = Postgres>) -> Result<i64, sqlx::Error> {
+    query!("select id from users where role = 'pool'")
+        .fetch_one(executor)
+        .await
+        .and_then(|res| Ok(res.id))
 }
