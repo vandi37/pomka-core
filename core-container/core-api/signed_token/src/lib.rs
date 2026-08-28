@@ -15,8 +15,7 @@
 
 use base_x::{decode, encode};
 use poly1305::{
-    Poly1305,
-    universal_hash::{KeyInit, UniversalHash, crypto_common::KeySizeUser},
+    Poly1305, universal_hash::{KeyInit, UniversalHash, common::KeySizeUser},
 };
 use subtle::ConstantTimeEq;
 

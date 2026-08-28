@@ -142,15 +142,13 @@ pub async fn map_executor(
                 tracing::error!(target: "map-executor", error=?e, id, "error selecting executor by bot id");
                 AppError::Internal
             })?.id,
-        ExecutorRef::Userbot(id) => query!("select id from executors where admin = $1", id)
+        ExecutorRef::Userbot(id) => query!("select id from executors where userbot = $1", id)
                 .fetch_one(&state.db)
                 .await.map_err(|e| {
                 tracing::error!(target: "map-executor", error=?e, id, "error selecting executor by userbot id");
                 AppError::Internal
             })?.id,
     };
-    req.extensions_mut().insert(Executor{
-    id
-    });
+    req.extensions_mut().insert(Executor{id});
     Ok(next.run(req).await)
 }
