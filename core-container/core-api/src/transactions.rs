@@ -1,15 +1,15 @@
 // The Pomka Ecosystem Core Source Code
 // Copyright (C) 2026 Lev (Leo) Kondukov (aka DiceBarrel, Barrel, Vandi)
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -23,7 +23,7 @@ use crate::{
         transactions::Transaction,
         users::{NotifyLevel, UserRole},
     },
-    services::{executors, users},
+    services::{executors, global_config::get_fees, users},
 };
 
 pub struct Pay {
@@ -33,19 +33,30 @@ pub struct Pay {
     pub executor: i64,
     pub data: Option<Value>,
     pub r#type: String,
-    pub allowed: bool,
+    pub allowed: TxAllowance,
     pub idempotency_key: Option<Uuid>,
+}
+
+pub enum TxAllowance {
+    OneTimeAllowed,
+    UserTokenAllowed,
+    NotAllowed, // or allowed as the userbot owner
 }
 
 pub enum TxError {
     Sqlx(sqlx::Error),
-    Redis(redis::RedisError),
-    Serde(serde_json::Error),
     NegativeAmount,
     UserNotFound(i64),
     ExecutorNotFound(i64),
     InsufficientFunds,
     Forbidden(i64),
+    Overflow,
+    DuplicateIdempotencyKey,
+}
+
+pub enum SendingError {
+    Redis(redis::RedisError),
+    Serde(serde_json::Error),
 }
 // Don't forget to notify the user with notify_about_transaction() after the database transaction is committed
 pub async fn pay_tx<'a>(
@@ -60,27 +71,22 @@ pub async fn pay_tx<'a>(
         .map_err(TxError::Sqlx)?
         .ok_or(TxError::ExecutorNotFound(pay.executor))?;
 
-    let (first_id, second_id) = if pay.sender < pay.receiver {
-        (pay.sender, pay.receiver)
-    } else {
-        (pay.receiver, pay.sender)
-    };
-    let first = users::get_user_for_update(tx.as_mut(), first_id)
+    let sender = users::get_user_for_update(tx.as_mut(), pay.sender)
         .await
         .map_err(TxError::Sqlx)?
-        .ok_or(TxError::UserNotFound(first_id))?;
+        .ok_or(TxError::UserNotFound(pay.sender))?;
 
-    let second = users::get_user_for_update(tx.as_mut(), second_id)
+    let receiver = users::get_user(tx.as_mut(), pay.receiver)
         .await
         .map_err(TxError::Sqlx)?
-        .ok_or(TxError::UserNotFound(second_id))?;
+        .ok_or(TxError::UserNotFound(pay.receiver))?;
 
-    let (sender, receiver) = if first_id == pay.sender{
-        (first, second)
-    } else {
-        (second, first)
-    };
-    
+    let fees = get_fees(tx.as_mut()).await.map_err(TxError::Sqlx)?;
+    let mut fee = fees.bot;
+    if let Some(_) = exec.admin {
+        fee = fees.admin
+    }
+
     if let Some(u) = exec.userbot {
         if sender.role == UserRole::Pool {
             return Err(TxError::Forbidden(exec.id));
@@ -89,13 +95,23 @@ pub async fn pay_tx<'a>(
             .fetch_one(tx.as_mut())
             .await
             .map_err(TxError::Sqlx)?;
-        if userbot.owner_id != sender.id && !pay.allowed {
-            return Err(TxError::Forbidden(exec.id));
-        }
+        match pay.allowed {
+            TxAllowance::NotAllowed if userbot.owner_id == sender.id => fee = fees.userbot_owner,
+            TxAllowance::OneTimeAllowed => fee = fees.userbot,
+            TxAllowance::UserTokenAllowed => fee = fees.userbot_user_token,
+            _ => return Err(TxError::Forbidden(exec.id)),
+        };
     };
     if sender.balance < pay.amount && sender.role != UserRole::Pool {
         return Err(TxError::InsufficientFunds);
     }
+
+    let received_amount = pay
+        .amount
+        .checked_mul((fees.scale - fee) as i64)
+        .and_then(|v| v.checked_div(fees.scale as i64))
+        .ok_or(TxError::Overflow)?;
+
     query!(
         "update users set balance = balance - $1 where id = $2",
         pay.amount,
@@ -104,10 +120,23 @@ pub async fn pay_tx<'a>(
     .execute(tx.as_mut())
     .await
     .map_err(TxError::Sqlx)?;
+
     query!(
         "update users set balance = balance + $1 where id = $2",
-        pay.amount,
+        received_amount,
         pay.receiver
+    )
+    .execute(tx.as_mut())
+    .await
+    .map_err(TxError::Sqlx)?;
+
+    query!(
+        r#"update users set balance = balance + $1 
+        where id in 
+            (select id from users 
+                where role = 'pool' limit 1
+            );"#,
+        pay.amount - received_amount,
     )
     .execute(tx.as_mut())
     .await
@@ -115,6 +144,7 @@ pub async fn pay_tx<'a>(
 
     let res = query_as!(Transaction, r#"insert into transactions (idempotency_key, sender_id, receiver_id, amount, executor, data, type)
         values ($1, $2, $3, $4, $5, $6, $7)
+        on conflict (idempotency_key) do nothing
         returning id, idempotency_key, sender_id, receiver_id, amount, executor, data, type, updated_at, created_at"#,
         pay.idempotency_key,
         pay.sender,
@@ -123,21 +153,44 @@ pub async fn pay_tx<'a>(
         exec.id,
         pay.data,
         pay.r#type
-    ).fetch_one(tx.as_mut()).await.map_err(TxError::Sqlx)?;
-    
+    ).fetch_optional(tx.as_mut())
+        .await
+        .map_err(TxError::Sqlx)?
+        .ok_or(TxError::DuplicateIdempotencyKey)?;
+
     Ok((res, sender.notify_level, receiver.notify_level))
 }
 
-pub async fn pay(pay: Pay, pool: &PgPool, client: &Client) -> Result<Transaction, TxError> {
+pub async fn pay(
+    pay: Pay,
+    pool: &PgPool,
+    client: &Client,
+) -> Result<(Transaction, Option<SendingError>), TxError> {
     let (sender_id, receiver_id) = (pay.sender, pay.receiver);
     let mut tx = pool.begin().await.map_err(TxError::Sqlx)?;
     let (res, sender_notify_level, receiver_notify_level) = pay_tx(pay, &mut tx).await?;
     tx.commit().await.map_err(TxError::Sqlx)?;
-    notify_about_transaction(client, sender_id, sender_notify_level, receiver_id, receiver_notify_level, &res).await?;
-    Ok(res)
+    let err = notify_about_transaction(
+        client,
+        sender_id,
+        sender_notify_level,
+        receiver_id,
+        receiver_notify_level,
+        &res,
+    )
+    .await
+    .err();
+    Ok((res, err))
 }
 
-pub async fn notify_about_transaction( client: &Client,sender_id: i64, sender_notify_level: NotifyLevel, receiver_id:i64, receiver_notify_level: NotifyLevel, tx: &Transaction) -> Result<(), TxError> {
+pub async fn notify_about_transaction(
+    client: &Client,
+    sender_id: i64,
+    sender_notify_level: NotifyLevel,
+    receiver_id: i64,
+    receiver_notify_level: NotifyLevel,
+    tx: &Transaction,
+) -> Result<(), SendingError> {
     if sender_notify_level == NotifyLevel::All {
         publish_transaction(client, &tx, sender_id).await?;
     }
@@ -155,13 +208,13 @@ pub async fn publish_transaction(
     client: &Client,
     tx: &Transaction,
     user_id: i64,
-) -> Result<(), TxError> {
+) -> Result<(), SendingError> {
     let mut conn = client
         .get_connection_manager()
         .await
-        .map_err(TxError::Redis)?;
+        .map_err(SendingError::Redis)?;
 
-    let payload = serde_json::to_string(tx).map_err(TxError::Serde)?;
+    let payload = serde_json::to_string(tx).map_err(SendingError::Serde)?;
     conn.xadd(
         TX_STREAM,
         "*",
@@ -172,5 +225,5 @@ pub async fn publish_transaction(
         ],
     )
     .await
-    .map_err(TxError::Redis)
+    .map_err(SendingError::Redis)
 }

@@ -15,3 +15,4 @@
 
 pub mod users;
 pub mod executors;
+pub mod global_config;
