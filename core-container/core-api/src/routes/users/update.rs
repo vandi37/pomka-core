@@ -162,8 +162,22 @@ pub async fn update_user_handle(
     if by.role < UserRole::User || by.role < UserRole::Moderator && handle.by != handle.id {
         Err(AppError::UserForbidden(by.id))?
     }
+    users::get_user_for_update(&state.db, handle.id).await.map_err(|e|{
+            tracing::error!(target: "update-user-handle", 
+            error=?e, 
+            executor=executor.id, 
+            userhandle=handle.userhandle, 
+            by=handle.by,
+            id=handle.id,  
+            "gotten error while getting user");
+        AppError::Internal
+    })?;
 
-    let res = query_as::<_, User>( "update users set userhandle=$1 where id=$2 returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
+    let res = query_as::<_, User>( r#"
+        update users set userhandle=$1 where id=$2 
+        on conflict (userhandle) do nothing
+        returning id, name, userhandle, balance, role, notify_level, updated_at, created_at"#
+    )
         .bind(&handle.userhandle)
         .bind(handle.id)
         .fetch_optional(tx.as_mut())
@@ -177,7 +191,7 @@ pub async fn update_user_handle(
             id=handle.id,  
             "gotten error while updating user handle");
         AppError::Internal
-        })?.ok_or(AppError::UserNotFound(handle.id))?;
+        })?.ok_or(AppError::UserhandleTaken(handle.userhandle.clone()))?;
 
     tx.commit().await.map_err(|e|{
         tracing::error!(target: "update-user-handle", 

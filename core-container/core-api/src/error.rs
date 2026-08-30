@@ -39,6 +39,7 @@ pub enum AppError {
     // 409 4**
     AdminUsernameTaken(String),
     BotUsernameTaken(String),
+    UserhandleTaken(String),
     DailyRewardAlreadyClaimed(i64),
 
     // 404 5**
@@ -67,6 +68,7 @@ impl AppError {
             AppError::InsufficientFunds => 303,
             AppError::AdminUsernameTaken(_) => 400,
             AppError::BotUsernameTaken(_) => 401,
+            AppError::UserhandleTaken(_) => 402,
             AppError::DailyRewardAlreadyClaimed(_) => 402,
             AppError::AdminNotFound(_) => 500,
             AppError::BotNotFound(_) => 501,
@@ -292,6 +294,18 @@ impl IntoResponse for AppError {
                     message: "daily reward already claimed".into(),
                     app_code,
                     data: Map::new(),
+                }),
+            )
+                .into_response(),
+
+                Self::UserhandleTaken(handle) => (
+                StatusCode::CONFLICT,
+                Json(ResponseError {
+                    code: StatusCode::CONFLICT.as_u16(),
+                    message: "userhandle is taken".into(),
+                    app_code,
+
+                    data: Map::from_iter([("userhandle".to_string(), Value::String(handle))]),
                 }),
             )
                 .into_response(),
