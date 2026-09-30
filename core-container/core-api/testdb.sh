@@ -7,4 +7,4 @@ docker run --name sqlx-test-db \
 export DATABASE_URL=postgres://postgres:postgres@localhost:5432/myapp_test
 sqlx database create
 sqlx migrate run
-cargo sqlx prepare
+cargo sqlx prepare    
