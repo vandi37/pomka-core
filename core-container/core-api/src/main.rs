@@ -51,7 +51,12 @@ async fn main() {
             exit(1)
         });
 
-    let redis = Client::open(config.redis_url).unwrap_or_else(|e| {
+    let client = Client::open(config.redis_url).unwrap_or_else(|e| {
+        tracing::error!(target:"setup", "gotten error: {e}");
+        exit(1)
+    });
+
+    let redis =  client.get_connection_manager().await.unwrap_or_else(|e| {
         tracing::error!(target:"setup", "gotten error: {e}");
         exit(1)
     });

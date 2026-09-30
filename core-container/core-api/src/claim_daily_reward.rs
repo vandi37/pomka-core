@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use chrono::prelude::*;
-use redis::{AsyncCommands, RedisError, RedisResult};
+use redis::{AsyncCommands, RedisError, RedisResult, aio::ConnectionManager};
 
 /// KEYS[1] = the redis key for this user's last claim
 /// ARGV[1] = current unix timestamp (seconds)
@@ -47,15 +47,10 @@ pub enum ClaimDailyRewardError {
 }
 
 pub async fn claim_daily_reward(
-    client: &redis::Client,
+    mut conn: ConnectionManager,
     id: i64,
     reset_hour_utc: u32,
 ) -> Result<(), ClaimDailyRewardError> {
-    let mut conn = client
-        .get_connection_manager()
-        .await
-        .map_err(ClaimDailyRewardError::Redis)?;
-
     let key = format!("{DAILY_KEY}:{id}");
     let now = Utc::now().timestamp();
     let boundary = most_recent_reset_boundary(reset_hour_utc);
@@ -77,12 +72,9 @@ pub async fn claim_daily_reward(
 }
 
 pub async fn remove_daily_reward_record(
-    client: &redis::Client,
+    mut conn: ConnectionManager,
     id: i64,
 ) -> RedisResult<()> {
-    let mut conn = client
-        .get_connection_manager()
-        .await?;
     let key = format!("{DAILY_KEY}:{id}");
     conn.del(key).await?
 }

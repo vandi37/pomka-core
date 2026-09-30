@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use redis::Client;
+use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 
 use crate::{hash::PasswordHasherService, tokens::TokensState};
@@ -21,7 +21,7 @@ use crate::{hash::PasswordHasherService, tokens::TokensState};
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
-    pub redis: Client,
+    pub redis: ConnectionManager,
     pub password_hasher_service: PasswordHasherService,
     pub tokens_state: TokensState,
     pub daily_claim: i64,
