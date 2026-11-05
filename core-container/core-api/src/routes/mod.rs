@@ -15,7 +15,6 @@
 
 pub mod admins;
 mod bots;
-mod claim_daily_reward;
 mod global_config;
 pub mod middleware;
 mod users;
@@ -63,15 +62,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/ping", get(|| async { Json(json!("pong")) }))
         .nest("/admins/", admins::admins_router(state.clone()))
         .nest("/bots/", bots::bots_router(state.clone()))
-        .nest(
-            "/users/",
-            users::users_router(state.clone()).route(
-                "/daily-reward/{id}",
-                post(claim_daily_reward::claim_daily_reward)
-                    .route_layer(from_fn_with_state(state.clone(), map_executor))
-                    .route_layer(from_fn_with_state(state.clone(), access)),
-            ),
-        )
+        .nest("/users/", users::users_router(state.clone()))
         .nest(
             "/global-config/",
             global_config::global_config_router(state.clone()),
