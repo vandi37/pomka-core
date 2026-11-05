@@ -40,7 +40,7 @@ pub async fn logging(req: Request, next: Next) -> Response {
     if status >= 500 {
         tracing::error!(target:"request", method = %method, path = %path, status, latency = ?latency, "request error");
     } else {
-        tracing::info!(target: "request", method = %method, path = %path, status, latency = ?latency, "request");
+        tracing::debug!(target: "request", method = %method, path = %path, status, latency = ?latency, "request");
     }
 
     response
@@ -53,7 +53,7 @@ pub async fn adapter(
     next: Next,
 ) -> Result<Response, AppError> {
     (Utc::now().timestamp()
-        > state
+        < state
             .tokens_state
             .adapter_tokens
             .verify(

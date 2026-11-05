@@ -37,6 +37,7 @@ mod create;
 mod get;
 mod update;
 mod delete;
+
 pub fn users_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .merge(

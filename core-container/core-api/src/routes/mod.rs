@@ -66,7 +66,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .nest(
             "/users/",
             users::users_router(state.clone()).route(
-                "/daily-reward",
+                "/daily-reward/{id}",
                 post(claim_daily_reward::claim_daily_reward)
                     .route_layer(from_fn_with_state(state.clone(), map_executor))
                     .route_layer(from_fn_with_state(state.clone(), access)),
