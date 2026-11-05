@@ -23,7 +23,7 @@ use axum::{
 };
 use sqlx::query_as;
 
-use crate::{error::AppError, routes::{MAX_LIMIT, Params, admins::{Admin, AdminRes}}, state::AppState};
+use crate::{utils::error::AppError, routes::{MAX_LIMIT, Params, admins::{Admin, AdminRes}}, utils::state::AppState};
 
 pub async fn get_admin(
     State(state): State<Arc<AppState>>,

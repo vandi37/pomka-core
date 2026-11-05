@@ -24,7 +24,7 @@ use axum::{
 use sqlx::query;
 
 use crate::{
-    auth_prefix::AuthPrefix, error::AppError, routes::bots::Bot, state::AppState, tokens::validate_jwt
+    utils::auth_prefix::AuthPrefix, utils::error::AppError, routes::bots::Bot, utils::state::AppState, utils::tokens::validate_jwt
 };
 
 pub async fn bot_access(

@@ -24,8 +24,8 @@ use axum::{
 use sqlx::query;
 
 use crate::{
-    auth_prefix::AuthPrefix, error::AppError, routes::admins::Admin, state::AppState,
-    tokens::validate_jwt,
+    utils::auth_prefix::AuthPrefix, utils::error::AppError, routes::admins::Admin, utils::state::AppState,
+    utils::tokens::validate_jwt,
 };
 
 pub async fn admin_access(

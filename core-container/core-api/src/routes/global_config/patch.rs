@@ -24,7 +24,7 @@ use axum::{
 use rust_decimal::{Decimal, dec};
 use sqlx::query;
 
-use crate::{error::AppError, routes::admins::Admin, state::AppState};
+use crate::{utils::error::AppError, routes::admins::Admin, utils::state::AppState};
 
 pub async fn patch_admin_fee(
     State(state): State<Arc<AppState>>,
@@ -33,7 +33,7 @@ pub async fn patch_admin_fee(
 ) -> Result<impl IntoResponse, AppError> {
     let fee = fee.clamp(dec!(0), dec!(1));
     query!("update global_config set admin_fee=cast($1 * cast(scale as decimal(20, 10)) as int);", fee).execute(&state.db).await
-         .map_err(|e| {
+        .map_err(|e| {
             tracing::error!(target:"patch-admin-fee", error=?e, by=admin.id, "gotten error while patching admin fee");
             AppError::Internal
         })?;
@@ -48,7 +48,7 @@ pub async fn patch_bot_fee(
     let fee = fee.clamp(dec!(0), dec!(1));
 
     query!("update global_config set bot_fee=cast($1 * cast(scale as decimal(20, 10)) as int);", fee).execute(&state.db).await
-         .map_err(|e| {
+        .map_err(|e| {
             tracing::error!(target:"patch-bot-fee", error=?e, by=admin.id, "gotten error while patching bot fee");
             AppError::Internal
         })?;
@@ -63,7 +63,7 @@ pub async fn patch_userbot_fee(
     let fee = fee.clamp(dec!(0), dec!(1));
 
     query!("update global_config set userbot_fee=cast($1 * cast(scale as decimal(20, 10)) as int);", fee).execute(&state.db).await
-         .map_err(|e| {
+        .map_err(|e| {
             tracing::error!(target:"patch-userbot-fee", error=?e, by=admin.id, "gotten error while patching userbot fee");
             AppError::Internal
         })?;
@@ -78,7 +78,7 @@ pub async fn patch_userbot_user_token_fee(
     let fee = fee.clamp(dec!(0), dec!(1));
 
     query!("update global_config set userbot_user_token_fee=cast($1 * cast(scale as decimal(20, 10)) as int);", fee).execute(&state.db).await
-         .map_err(|e| {
+        .map_err(|e| {
             tracing::error!(target:"patch-userbot-user-token-fee", error=?e, by=admin.id, "gotten error while patching userbot user token fee");
             AppError::Internal
         })?;
@@ -93,7 +93,7 @@ pub async fn patch_userbot_owner_fee(
     let fee = fee.clamp(dec!(0), dec!(1));
 
     query!("update global_config set userbot_owner_fee=cast($1 * cast(scale as decimal(20, 10)) as int);", fee).execute(&state.db).await
-         .map_err(|e| {
+        .map_err(|e| {
             tracing::error!(target:"patch-userbot-owner-fee", error=?e, by=admin.id, "gotten error while patching userbot owner fee");
             AppError::Internal
         })?;

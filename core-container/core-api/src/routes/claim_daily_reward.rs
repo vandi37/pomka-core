@@ -18,7 +18,7 @@ use std::sync::Arc;
 use axum::{Extension, Json, extract::{Path, State}, response::IntoResponse};
 use redis::RedisError;
 
-use crate::{claim_daily_reward::{self, ClaimDailyRewardError, remove_daily_reward_record}, error::AppError, models::executors::ExecutorType, routes::Executor, services::{executors::get_executor, users::{get_pool_id, get_user}}, state::AppState, transactions::{Pay, notify_about_transaction, pay_tx}};
+use crate::{functions::claim_daily_reward::{self, ClaimDailyRewardError, remove_daily_reward_record}, utils::error::AppError, models::executors::ExecutorType, routes::Executor, services::{executors::get_executor, users::{get_pool_id, get_user}}, utils::state::AppState, functions::transactions::{Pay, notify_about_transaction, pay_tx}};
 pub const TYPE: &str = "claim-daily-reward";
 
 pub async fn claim_daily_reward(
@@ -34,7 +34,6 @@ pub async fn claim_daily_reward(
             "gotten error while creating transaction");
         AppError::Internal
     })?;
-
     let executor_row = get_executor(tx.as_mut(), executor.id).await.map_err(|e| {
         tracing::error!(target: "claim-daily-reward", 
             error=?e, 
@@ -47,7 +46,6 @@ pub async fn claim_daily_reward(
     if executor_row.executor_type == ExecutorType::Userbot {
         Err(AppError::ExecutorForbidden(executor_row.id))?
     }
-
     get_user(&state.db, id).await.map_err(|e| {
         tracing::error!(target: "claim-daily-reward", 
             error=?e, 
@@ -69,7 +67,6 @@ pub async fn claim_daily_reward(
         Err(ClaimDailyRewardError::AlreadyClaimedToday(next)) => Err(AppError::DailyRewardAlreadyClaimed(next)),
         Ok(()) => Ok(()),
     }?;
-
     let pool = get_pool_id(&state.db).await.map_err(|e| {
             tracing::error!(target: "claim-daily-reward", 
                 error=?e, 

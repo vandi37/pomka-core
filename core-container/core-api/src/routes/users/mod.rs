@@ -31,7 +31,7 @@ use crate::{
         admins::middleware::admin_access, middleware::{access, adapter, map_executor}, users::{
             create::create_user, delete::{delete_user, remove_user_handle}, get::{get_user_dispatcher, get_users, users_leaderboard}, update::{update_user_handle, update_user_name, update_user_notify, update_user_role},
         },
-    }, state::AppState,
+    }, utils::state::AppState,
 };
 mod create;
 mod get;

@@ -22,7 +22,7 @@ use signed_token::Signed;
 use uuid::Uuid;
 
 const ISS: &'static str = "pomka-core";
-use crate::config::TokenConfig;
+use crate::utils::config::TokenConfig;
 
 #[derive(Clone)]
 pub struct TokensState {

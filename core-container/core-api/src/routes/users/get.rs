@@ -24,9 +24,9 @@ use serde::Serialize;
 use sqlx::{Postgres, query_as};
 
 use crate::{
-    error::AppError, models::users::User, routes::{
+    utils::error::AppError, models::users::User, routes::{
         Executor, MAX_LIMIT, Params, admins::Admin, users::{USER_HANDLE_REGEX, VALID_USER_HANDLE}
-    }, services::users, state::AppState
+    }, services::users, utils::state::AppState
 };
 
 pub async fn get_user(

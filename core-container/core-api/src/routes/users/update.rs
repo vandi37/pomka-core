@@ -19,7 +19,7 @@ use axum::{Json, extract::{Extension, State}, response::IntoResponse};
 use serde::Deserialize;
 use sqlx::query_as;
 
-use crate::{error::AppError, models::{executors::ExecutorType, users::{NotifyLevel, User, UserRole}}, routes::{Executor, users::{USER_HANDLE_REGEX, VALID_USER_HANDLE, VALID_USER_NAME}}, services::{executors::get_executor, users}, state::AppState};
+use crate::{utils::error::AppError, models::{executors::ExecutorType, users::{NotifyLevel, User, UserRole}}, routes::{Executor, users::{USER_HANDLE_REGEX, VALID_USER_HANDLE, VALID_USER_NAME}}, services::{executors::get_executor, users}, utils::state::AppState};
 
 #[derive(Clone, Deserialize)]
 pub struct UpdateName {
@@ -34,7 +34,7 @@ pub async fn update_user_name(
     Json(name): Json<UpdateName>,
 ) -> Result<impl IntoResponse, AppError> {
     let mut tx = state.db.begin().await.map_err(|e|{
-       tracing::error!(target: "update-user-name", 
+        tracing::error!(target: "update-user-name", 
             error=?e, 
             executor=executor.id, 
             name=name.name, 

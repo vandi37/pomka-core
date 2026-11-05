@@ -17,11 +17,11 @@ use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State, response::IntoResponse};
 
-use crate::{ error::AppError, routes::Executor, services::global_config, state::AppState};
+use crate::{ utils::error::AppError, routes::Executor, services::global_config, utils::state::AppState};
 
 pub async fn get_fees(
-     State(state): State<Arc<AppState>>,
-     Extension(executor): Extension<Executor>,
+    State(state): State<Arc<AppState>>,
+    Extension(executor): Extension<Executor>,
 ) -> Result<impl IntoResponse, AppError> {
     let fees = global_config::get_fees(&state.db).await.map_err(|e| {
             tracing::error!(target:"get-fees", error=?e, executor=executor.id, "gotten error while getting fees");

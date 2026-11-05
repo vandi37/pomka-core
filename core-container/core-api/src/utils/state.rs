@@ -16,7 +16,7 @@
 use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 
-use crate::{hash::PasswordHasherService, tokens::TokensState};
+use crate::{utils::hash::PasswordHasherService, utils::tokens::TokensState};
 
 #[derive(Clone)]
 pub struct AppState {

@@ -36,7 +36,7 @@ use crate::{
         global_config::get::get_fees,
         middleware::{access, logging, map_executor},
     },
-    state::AppState,
+    utils::state::AppState,
 };
 
 #[derive(Clone, Serialize)]

@@ -25,9 +25,9 @@ use serde::Deserialize;
 use sqlx::query_as;
 
 use crate::{
-    error::AppError,
+    utils::error::AppError,
     routes::{admins::Admin, bots::BotRes},
-    state::AppState,
+    utils::state::AppState,
 };
 #[derive(Deserialize, Clone)]
 pub struct UpdateBot {

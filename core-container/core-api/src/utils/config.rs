@@ -17,7 +17,7 @@ use std::{env, str::FromStr};
 
 use tracing::Level;
 
-use crate::logger::LoggerConfig;
+use crate::utils::logger::LoggerConfig;
 
 #[derive(Clone, Debug)]
 pub struct Config {

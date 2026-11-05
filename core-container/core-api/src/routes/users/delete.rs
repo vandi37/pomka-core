@@ -19,7 +19,7 @@ use axum::{Json, extract::{Extension, State}, http::StatusCode, response::IntoRe
 use serde::Deserialize;
 use sqlx::{query, query_as};
 
-use crate::{error::AppError, models::{executors::ExecutorType, users::{ User, UserRole}}, routes::Executor, services::{executors::get_executor, users}, state::AppState};
+use crate::{utils::error::AppError, models::{executors::ExecutorType, users::{ User, UserRole}}, routes::Executor, services::{executors::get_executor, users}, utils::state::AppState};
 
 #[derive(Clone, Deserialize)]
 pub struct IdAndBy {
@@ -32,7 +32,7 @@ pub async fn remove_user_handle(
     Json(handle): Json<IdAndBy>,
 ) -> Result<impl IntoResponse, AppError> {
     let mut tx = state.db.begin().await.map_err(|e|{
-       tracing::error!(target: "remove-user-handle", 
+        tracing::error!(target: "remove-user-handle", 
             error=?e, 
             executor=executor.id, 
             by=handle.by, 
@@ -90,7 +90,7 @@ pub async fn remove_user_handle(
             "gotten error while committing transaction");
         AppError::Internal
     })?;
-     tracing::debug!(target: "remove-user-handle", 
+    tracing::debug!(target: "remove-user-handle", 
             executor=executor.id, 
             by=handle.by,
             id=handle.id,  
@@ -104,7 +104,7 @@ pub async fn delete_user(
     Json(id_and_by): Json<IdAndBy>,
 ) -> Result<impl IntoResponse, AppError> {
     let mut tx = state.db.begin().await.map_err(|e|{
-       tracing::error!(target: "delete-user", 
+        tracing::error!(target: "delete-user", 
             error=?e, 
             executor=executor.id, 
             by=id_and_by.by, 
@@ -148,7 +148,7 @@ pub async fn delete_user(
     })?.ok_or(AppError::UserNotFound(id_and_by.id))?;
 
     if executor_row.executor_type != ExecutorType::Admin &&
-         (
+        (
             by.role < UserRole::Admin || 
             user.role == UserRole::Pool || 
             user.role >= by.role
@@ -201,7 +201,7 @@ pub async fn delete_user(
             "gotten error while committing transaction");
         AppError::Internal
     })?;
-     tracing::debug!(target: "update-user-role", 
+    tracing::debug!(target: "update-user-role", 
             executor=executor.id, 
             by=id_and_by.by, 
             id=id_and_by.id, 

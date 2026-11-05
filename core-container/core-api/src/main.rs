@@ -13,29 +13,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod config;
-mod error;
-mod hash;
-mod logger;
+
 mod models;
 mod routes;
-mod state;
-mod tokens;
-mod auth_prefix;
-mod userbot;
-mod transactions;
+
 mod services;
-mod claim_daily_reward;
+mod functions;
+mod utils;
 
 use redis::Client;
 use std::{net::SocketAddr, process::exit, sync::Arc};
 
-use config::Config;
-use state::AppState;
+use utils::config::Config;
+use utils::state::AppState;
 
 use sqlx::postgres::PgPoolOptions;
 
-use crate::{hash::PasswordHasherService, logger::init_logger, routes::router, tokens::TokensState};
+use crate::{utils::hash::PasswordHasherService, utils::logger::init_logger, routes::router, utils::tokens::TokensState};
 
 #[tokio::main]
 async fn main() {

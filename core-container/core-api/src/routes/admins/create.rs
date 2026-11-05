@@ -23,12 +23,11 @@ use axum::{
 };
 use sqlx::query_as;
 
-use crate::{
+use crate::utils::{
     error::AppError,
-    routes::admins::{Admin, AdminRes, InputAdmin},
     state::AppState,
 };
-
+use crate::routes::admins::{Admin, AdminRes, InputAdmin};
 pub async fn create_admin(
     State(state): State<Arc<AppState>>,
     Extension(admin): Extension<Admin>,

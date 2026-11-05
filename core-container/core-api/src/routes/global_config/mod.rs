@@ -22,16 +22,15 @@ use axum::{
     routing::patch,
 };
 
-use crate::{routes::{admins::middleware::admin_access, global_config::patch::{patch_admin_fee, patch_bot_fee, patch_userbot_fee, patch_userbot_owner_fee, patch_userbot_user_token_fee}}, state::AppState};
+use crate::{routes::{admins::middleware::admin_access, global_config::patch::{patch_admin_fee, patch_bot_fee, patch_userbot_fee, patch_userbot_owner_fee, patch_userbot_user_token_fee}}, utils::state::AppState};
 
 
 pub fn global_config_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
-        .route("/{fee}", patch(patch_admin_fee)
-            .patch(patch_bot_fee)
-            .patch(patch_userbot_fee)
-            .patch(patch_userbot_user_token_fee)
-            .patch(patch_userbot_owner_fee)
-        )
+        .route("/admin", patch(patch_admin_fee))
+        .route("/bot", patch(patch_bot_fee))
+        .route("/userbot", patch(patch_userbot_fee))
+        .route("/userbot-user-token", patch(patch_userbot_user_token_fee))
+        .route("/userbot-owner", patch(patch_userbot_owner_fee))
         .layer(from_fn_with_state(state, admin_access))
 }

@@ -21,9 +21,9 @@ use axum::{
 use sqlx::query_as;
 
 use crate::{
-    error::AppError,
+    utils::error::AppError,
     routes::{admins::Admin, bots::{BotRes, InputBot}},
-    state::AppState,
+    utils::state::AppState,
 };
 
 pub async fn create_bot(

@@ -26,8 +26,8 @@ use sqlx::query;
 
 use crate::routes::TokenResponse;
 use crate::routes::admins::{Admin, InputAdmin};
-use crate::tokens::create_jwt;
-use crate::{error::AppError, state::AppState};
+use crate::utils::tokens::create_jwt;
+use crate::{utils::error::AppError, utils::state::AppState};
 
 pub async fn login_admin(
     State(state): State<Arc<AppState>>,

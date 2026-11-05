@@ -22,7 +22,7 @@ use axum::{
 };
 use sqlx::query;
 
-use crate::{error::AppError, routes::admins::Admin, state::AppState};
+use crate::{utils::error::AppError, routes::admins::Admin, utils::state::AppState};
 
 pub async fn delete_admin(
     State(state): State<Arc<AppState>>,

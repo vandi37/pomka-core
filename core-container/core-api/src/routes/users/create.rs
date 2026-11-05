@@ -24,7 +24,7 @@ use axum::{
 use serde::Deserialize;
 use sqlx::query_as;
 
-use crate::{error::AppError, models::users::User, routes::{Executor, users::VALID_USER_NAME}, state::AppState};
+use crate::{utils::error::AppError, models::users::User, routes::{Executor, users::VALID_USER_NAME}, utils::state::AppState};
 
 #[derive(Deserialize, Clone)]
 pub struct CreateUser {
