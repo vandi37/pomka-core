@@ -18,7 +18,7 @@ use std::sync::Arc;
 use axum::{Extension, Json, extract::{Path, State}, response::IntoResponse};
 use redis::RedisError;
 
-use crate::{functions::claim_daily_reward::{self, ClaimDailyRewardError, remove_daily_reward_record}, utils::error::AppError, models::executors::ExecutorType, routes::Executor, services::{executors::get_executor, users::{get_pool_id, get_user}}, utils::state::AppState, functions::transactions::{Pay, notify_about_transaction, pay_tx}};
+use crate::{functions::{claim_daily_reward::{self, ClaimDailyRewardError, remove_daily_reward_record}, transactions::{Pay, notify_about_transaction, pay_tx}}, models::executors::ExecutorType, routes::Executor, services::{executors::get_executor, global_config, users::{get_pool_id, get_user}}, utils::{error::AppError, state::AppState}};
 pub const TYPE: &str = "claim-daily-reward";
 
 pub async fn claim_daily_reward(
@@ -44,18 +44,27 @@ pub async fn claim_daily_reward(
     })?.ok_or(AppError::ExecutorNotFound(executor.id))?;
 
     if executor_row.executor_type == ExecutorType::Userbot {
-        Err(AppError::ExecutorForbidden(executor_row.id))?
+        return Err(AppError::ExecutorForbidden(executor_row.id));
     }
-    get_user(&state.db, id).await.map_err(|e| {
+    get_user(tx.as_mut(), id).await.map_err(|e| {
+            tracing::error!(target: "claim-daily-reward", 
+                error=?e, 
+                executor=executor.id, 
+                id,
+                "gotten error while getting user");
+            AppError::Internal
+    })?.ok_or(AppError::UserNotFound(id))?;
+    
+    let daily_claim = global_config::get_daily_claim(tx.as_mut()).await.map_err(|e| {
         tracing::error!(target: "claim-daily-reward", 
             error=?e, 
             executor=executor.id, 
             id,
-            "gotten error while getting user");
+            "gotten error while getting daily claim");
         AppError::Internal
-    })?.ok_or(AppError::UserNotFound(id))?;
+    })?;
 
-    match claim_daily_reward::claim_daily_reward(state.redis.clone(), id, state.reset_hour_utc).await {
+    match claim_daily_reward::claim_daily_reward(state.redis.clone(), id, daily_claim.reset_hour).await {
         Err(ClaimDailyRewardError::Redis(r)) => {
             tracing::error!(target: "claim-daily-reward", 
                 error=?r, 
@@ -67,7 +76,7 @@ pub async fn claim_daily_reward(
         Err(ClaimDailyRewardError::AlreadyClaimedToday(next)) => Err(AppError::DailyRewardAlreadyClaimed(next)),
         Ok(()) => Ok(()),
     }?;
-    let pool = get_pool_id(&state.db).await.map_err(|e| {
+    let pool = get_pool_id(tx.as_mut()).await.map_err(|e| {
             tracing::error!(target: "claim-daily-reward", 
                 error=?e, 
                 id,
@@ -76,17 +85,6 @@ pub async fn claim_daily_reward(
             AppError::Internal
         })?;
 
-    let pay = Pay {
-        sender: pool ,
-        receiver: id, 
-        data: None,
-        amount: state.daily_claim,
-        executor: executor.id,
-        r#type: TYPE.into(),
-        allowed: false, // doesn't matter
-        user_token: None,
-        idempotency_key: None,
-    };
     let delete_redis = |e: RedisError| {
         tracing::error!(target: "claim-daily-reward", 
             error=?e, 
@@ -95,7 +93,17 @@ pub async fn claim_daily_reward(
         "gotten error while deleting daily reward record from redis");
     };
     let (transaction, nl_sender, nl_receiver) = match pay_tx(
-            pay, 
+            Pay {
+                sender: pool ,
+                receiver: id, 
+                data: None,
+                amount: daily_claim.daily_claim,
+                executor: executor.id,
+                r#type: TYPE.into(),
+                allowed: false, // doesn't matter
+                user_token: None,
+                idempotency_key: None,
+            }, 
             &mut tx, 
             &state.tokens_state.user_tokens,
         ).await {

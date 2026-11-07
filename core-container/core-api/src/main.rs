@@ -81,8 +81,6 @@ async fn main() {
         redis,
         password_hasher_service,
         tokens_state,
-        daily_claim: config.daily_claim,
-        reset_hour_utc: config.reset_hour_utc,
     });
     let app = router(state);
 

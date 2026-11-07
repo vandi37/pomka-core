@@ -31,3 +31,15 @@ pub async fn get_fees(
     tracing::debug!(target:"get-fees", executor=executor.id, "gotten fees");
     Ok(Json(fees))
 }
+
+pub async fn get_daily_claim(
+    State(state): State<Arc<AppState>>,
+    Extension(executor): Extension<Executor>,
+) -> Result<impl IntoResponse, AppError> {
+    let daily_claim = global_config::get_daily_claim(&state.db).await.map_err(|e| {
+            tracing::error!(target:"get-daily-daily_claim", error=?e, executor=executor.id, "gotten error while getting daily claim");
+            AppError::Internal
+        })?;
+    tracing::debug!(target:"get-daily-daily_claim", executor=executor.id, "gotten daily claim data");
+    Ok(Json(daily_claim))
+}

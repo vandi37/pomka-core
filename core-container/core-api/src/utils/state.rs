@@ -24,6 +24,4 @@ pub struct AppState {
     pub redis: ConnectionManager,
     pub password_hasher_service: PasswordHasherService,
     pub tokens_state: TokensState,
-    pub daily_claim: i64,
-    pub reset_hour_utc: u32,
 }

@@ -28,8 +28,6 @@ pub struct Config {
     pub logger: LoggerConfig,
     pub admin: AdminConfig,
     pub tokens: TokenConfig,
-    pub daily_claim: i64,
-    pub reset_hour_utc: u32,
 }
 #[derive(Clone, Debug)]
 pub struct AdminConfig {
@@ -71,9 +69,6 @@ impl Config {
                 user_tokens: get_env("SECRET_USER_TOKENS", "bebebebebebebebebebebebebebebebe"),
                 adapter_tokens: get_env("SECRET_ADAPTER_TOKENS", "bebebebebebebebebebebebebebebebe"),
             },
-            daily_claim: get_env("DAILY_CLAIM", "1000000").parse().unwrap_or(1_000_000),
-            reset_hour_utc: get_env("RESET_HOUR_UTC", "7").parse().unwrap_or(7),
-
         }
     }
 }
