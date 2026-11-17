@@ -48,13 +48,13 @@ pub fn users_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
                     "/",
                     post(create_user).route_layer(from_fn_with_state(state.clone(), adapter)).delete(delete_user),
                 )
-                .route("/name", patch(update_user_name))
-                .route("/userhandle", patch(update_user_handle).delete(remove_user_handle))
-                .route("/notify", patch(update_user_notify))
-                .route("/role", patch(update_user_role))
-                .route("/leaderboard", get(users_leaderboard))
-                .route("/{identifier}", get(get_user_dispatcher))
-                .route("/daily-reward/{id}",post(claim_daily_reward::claim_daily_reward))
+                .route("/name/", patch(update_user_name))
+                .route("/userhandle/", patch(update_user_handle).delete(remove_user_handle))
+                .route("/notify/", patch(update_user_notify))
+                .route("/role/", patch(update_user_role))
+                .route("/leaderboard/", get(users_leaderboard))
+                .route("/{identifier}/", get(get_user_dispatcher))
+                .route("/daily-reward/{id}/",post(claim_daily_reward::claim_daily_reward))
                 .layer(from_fn_with_state(state.clone(), map_executor))
                 .layer(from_fn_with_state(state.clone(), access)),
         )

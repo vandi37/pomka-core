@@ -29,7 +29,7 @@ use crate::{
     services::{
         executors,
         global_config::get_fees,
-        users::{self, get_pool_id, get_user_for_update},
+        users::{get_pool_id, get_user_for_update},
     },
 };
 

@@ -24,7 +24,7 @@ use std::sync::Arc;
 use axum::{
     Json, Router,
     middleware::{from_fn, from_fn_with_state},
-    routing::{get, post},
+    routing::get,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -59,7 +59,7 @@ pub struct Executor {
 pub fn router(state: Arc<AppState>) -> Router {
     let cors: CorsLayer = CorsLayer::new().allow_origin(Any).allow_methods(Any);
     Router::new()
-        .route("/ping", get(|| async { Json(json!("pong")) }))
+        .route("/ping/", get(|| async { Json(json!("pong")) }))
         .nest("/admins/", admins::admins_router(state.clone()))
         .nest("/bots/", bots::bots_router(state.clone()))
         .nest("/users/", users::users_router(state.clone()))
@@ -68,7 +68,7 @@ pub fn router(state: Arc<AppState>) -> Router {
             global_config::global_config_router(state.clone()),
         )
         .route(
-            "/fees",
+            "/fees/",
             get(get_fees)
                 .route_layer(from_fn_with_state(state.clone(), map_executor))
                 .route_layer(from_fn_with_state(state.clone(), access)),

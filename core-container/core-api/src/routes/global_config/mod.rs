@@ -27,12 +27,12 @@ use crate::{routes::{admins::middleware::admin_access, global_config::{get::get_
 
 pub fn global_config_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
-        .route("/admin", patch(patch_admin_fee))
-        .route("/bot", patch(patch_bot_fee))
-        .route("/userbot", patch(patch_userbot_fee))
-        .route("/userbot-user-token", patch(patch_userbot_user_token_fee))
-        .route("/userbot-owner", patch(patch_userbot_owner_fee))
-        .route("/daily-claim", get(get_daily_claim).patch(patch_daily_claim))
-        .route("/reset-hour", patch(patch_reset_hour))
+        .route("/admin/", patch(patch_admin_fee))
+        .route("/bot/", patch(patch_bot_fee))
+        .route("/userbot/", patch(patch_userbot_fee))
+        .route("/userbot-user-token/", patch(patch_userbot_user_token_fee))
+        .route("/userbot-owner/", patch(patch_userbot_owner_fee))
+        .route("/daily-claim/", get(get_daily_claim).patch(patch_daily_claim))
+        .route("/reset-hour/", patch(patch_reset_hour))
         .layer(from_fn_with_state(state, admin_access))
 }

@@ -55,16 +55,16 @@ pub struct BotRes {
 pub fn bots_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .route(
-            "/refresh",
+            "/refresh/",
             get(login::refresh_bot)
                 .route_layer(from_fn_with_state(state.clone(), middleware::bot_refresh)),
         )
-        .route("/login", post(login::login_bot))
+        .route("/login/", post(login::login_bot))
         .merge(
             Router::new()
                 .route("/", post(create::create_bot).get(get::get_bots))
                 .route(
-                    "/{id}",
+                    "/{id}/",
                     patch(update::update_bot)
                         .get(get::get_bot)
                         .delete(delete::delete_bot),

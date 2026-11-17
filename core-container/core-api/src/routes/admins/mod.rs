@@ -34,14 +34,14 @@ mod update;
 pub fn admins_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .route(
-            "/refresh",
+            "/refresh/",
             get(login::refresh_admin)
                 .route_layer(from_fn_with_state(state.clone(), middleware::admin_refresh)),
         )
-        .route("/login", post(login::login_admin))
+        .route("/login/", post(login::login_admin))
         .merge(
             Router::new()
-                .route("/{id}", get(get::get_admin).delete(delete::delete_admin))
+                .route("/{id}/", get(get::get_admin).delete(delete::delete_admin))
                 .route(
                     "/",
                     post(create::create_admin)

@@ -15,7 +15,7 @@
 
 use rust_decimal::Decimal;
 use serde::Serialize;
-use sqlx::{Executor, Postgres, query, query_as};
+use sqlx::{Executor, Postgres, query};
 
 #[derive(Clone)]
 pub struct Fees {
