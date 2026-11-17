@@ -26,6 +26,8 @@ pub struct Transaction {
     pub sender_id: i64,
     pub receiver_id: i64,
     pub amount: i64,
+    pub fee: i32,
+    pub scale: i32,
     pub executor: i64,
     pub data: Option<Value>,
     pub r#type: String,
