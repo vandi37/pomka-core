@@ -1,35 +1,39 @@
 // The Pomka Ecosystem Core Source Code
 // Copyright (C) 2026 Lev (Leo) Kondukov (aka DiceBarrel, Barrel, Vandi)
-// 
+//
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 mod models;
 mod routes;
 
-mod services;
 mod functions;
+mod services;
 mod utils;
 
+use axum::{ServiceExt, extract::Request};
 use redis::Client;
 use std::{net::SocketAddr, process::exit, sync::Arc};
+use tower_http::normalize_path::NormalizePath;
 
 use utils::config::Config;
 use utils::state::AppState;
 
 use sqlx::postgres::PgPoolOptions;
 
-use crate::{utils::hash::PasswordHasherService, utils::logger::init_logger, routes::router, utils::tokens::TokensState};
+use crate::{
+    routes::router, utils::hash::PasswordHasherService, utils::logger::init_logger,
+    utils::tokens::TokensState,
+};
 
 #[tokio::main]
 async fn main() {
@@ -50,7 +54,7 @@ async fn main() {
         exit(1)
     });
 
-    let redis =  client.get_connection_manager().await.unwrap_or_else(|e| {
+    let redis = client.get_connection_manager().await.unwrap_or_else(|e| {
         tracing::error!(target:"setup", "gotten error: {e}");
         exit(1)
     });
@@ -82,7 +86,7 @@ async fn main() {
         password_hasher_service,
         tokens_state,
     });
-    let app = router(state);
+    let app = NormalizePath::append_trailing_slash(router(state));
 
     let addr = SocketAddr::new(
         config.host.parse().unwrap_or_else(|e| {
@@ -99,7 +103,7 @@ async fn main() {
                 tracing::error!(target:"setup","gotten error: {e}");
                 exit(1)
             }),
-        app,
+        ServiceExt::<Request>::into_make_service(app),
     )
     .await
     .unwrap_or_else(|e| {

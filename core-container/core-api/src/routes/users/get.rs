@@ -86,7 +86,7 @@ pub async fn users_leaderboard(
     Query(mut params): Query<Params>,
 ) -> Result<impl IntoResponse, AppError> {
     params.limit = params.limit.min(MAX_LIMIT).max(1);
-    params.offset = params.offset.max(1);
+    params.offset = params.offset.min(0);
     let users = query_as!(LeaderBoardUser, "select id, name, balance from users order by balance desc limit $1 offset $2", params.limit, params.offset)
         .fetch_all(&state.db)
         .await.map_err(|e| {

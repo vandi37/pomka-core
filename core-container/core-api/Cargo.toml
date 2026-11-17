@@ -17,7 +17,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3.23", features = ["fmt", "json", "env-filter"] }
 tracing-appender = "0.2.5"
 tracing-error = "0.2"
-tower-http = { version = "0.7", features = ["trace", "cors"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.7", features = ["trace", "cors", "normalize-path"] }
 jsonwebtoken = {version = "11.0.0", features = ["rust_crypto"]}
 signed_token = {path="signed_token"}
 argon2 = "0.6.0"
