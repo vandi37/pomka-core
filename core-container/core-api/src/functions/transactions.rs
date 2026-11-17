@@ -201,14 +201,16 @@ pub async fn pay_tx<'a>(
         .await
         .map_err(TxError::Sqlx)?;
     }
-    let res = query_as!(Transaction, r#"insert into transactions (idempotency_key, sender_id, receiver_id, amount, executor, data, type)
-        values ($1, $2, $3, $4, $5, $6, $7)
+    let res = query_as!(Transaction, r#"insert into transactions (idempotency_key, sender_id, receiver_id, amount, fee, scale, executor, data, type)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         on conflict (idempotency_key) do nothing
         returning id, idempotency_key, sender_id, receiver_id, amount, executor, data, type, updated_at, created_at"#,
         pay.idempotency_key,
         pay.sender,
         pay.receiver,
         pay.amount,
+        fee,
+        fees.scale,
         exec.id,
         pay.data,
         pay.r#type

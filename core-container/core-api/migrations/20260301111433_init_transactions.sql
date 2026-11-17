@@ -19,12 +19,17 @@ create table transactions(
     sender_id bigint references users(id) on delete no action not null,
     receiver_id bigint references users(id) on delete no action not null,
     amount bigint not null check(amount >= 0),
+    fee int not null check (fee >= 0),
+    scale int not null check (scale >= 0),
     executor bigint references executors(id) on delete no action not null,
     data jsonb, -- additional data to transaction
     type text not null,
     updated_at timestamptz not null default current_timestamp,
-    created_at timestamptz not null default current_timestamp
+    created_at timestamptz not null default current_timestamp,
+    check (fee <= scale)
 );
+
+
 
 create trigger set_update_transaction before update on transactions
     for each row execute function update_modified_column();
