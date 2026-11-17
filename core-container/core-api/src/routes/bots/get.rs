@@ -48,12 +48,12 @@ pub async fn get_bots(
     Query(mut params): Query<Params>,
 ) -> Result<impl IntoResponse, AppError> {
     params.limit = params.limit.min(MAX_LIMIT).max(1);
-    params.offset = params.offset.max(1);
+    params.offset = params.offset.max(0);
     let bots = query_as!(BotRes, "select id, username, creator, updated_at, created_at from bots order by id asc limit $1 offset $2", params.limit, params.offset)
         .fetch_all(&state.db)
         .await
         .map_err(|e| {
-              tracing::error!(target:"get-bots", error=?e, by=admin.id, limit=params.limit, offset=params.offset, "gotten error while getting bots");
+                tracing::error!(target:"get-bots", error=?e, by=admin.id, limit=params.limit, offset=params.offset, "gotten error while getting bots");
             AppError::Internal
         })?;
     tracing::debug!(target:"get-bots", by=admin.id, limit=params.limit, offset=params.offset, len=bots.len(), "gotten bots");

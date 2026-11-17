@@ -51,7 +51,7 @@ pub async fn get_admins(
     Query(mut params): Query<Params>,
 ) -> Result<impl IntoResponse, AppError> {
     params.limit = params.limit.min(MAX_LIMIT).max(1);
-    params.offset = params.offset.max(1);
+    params.offset = params.offset.max(0);
     let admins = query_as!(AdminRes, "select id, username, creator, updated_at, created_at from admins order by id asc limit $1 offset $2", params.limit, params.offset)
         .fetch_all(&state.db)
         .await
