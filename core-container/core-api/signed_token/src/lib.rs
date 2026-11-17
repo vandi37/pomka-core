@@ -19,7 +19,7 @@ use poly1305::{
 };
 use subtle::ConstantTimeEq;
 
-const BASE: &str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+";
+const BASE: &str = "abcdefghijklmnopqrstuvwxyz:0123456789;ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 #[derive(Clone)]
 pub struct Signed {
