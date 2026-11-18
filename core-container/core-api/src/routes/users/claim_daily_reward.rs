@@ -100,9 +100,8 @@ pub async fn claim_daily_reward(
                 amount: daily_claim.daily_claim,
                 executor: executor.id,
                 r#type: TYPE.into(),
-                allowed: false, // doesn't matter
-                user_token: None,
-                idempotency_key: None,
+                disable_fee: true,
+                ..Default::default()
             }, 
             &mut tx, 
             &state.tokens_state.user_tokens,

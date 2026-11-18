@@ -31,8 +31,7 @@ use serde_json::json;
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::{
-    routes::middleware::logging,
-    utils::state::AppState,
+    routes::middleware::logging, utils::{router::new_router, state::AppState},
 };
 
 #[derive(Clone, Serialize)]
@@ -55,7 +54,7 @@ pub struct Executor {
 
 pub fn router(state: Arc<AppState>) -> Router {
     let cors: CorsLayer = CorsLayer::new().allow_origin(Any).allow_methods(Any);
-    Router::new()
+    new_router()
         .route("/ping/", get(|| async { Json(json!("pong")) }))
         .nest("/admins/", admins::admins_router(state.clone()))
         .nest("/bots/", bots::bots_router(state.clone()))

@@ -100,7 +100,7 @@ pub async fn update_user_name(
             "gotten error while committing transaction");
         AppError::Internal
     })?;
-     tracing::debug!(target: "update-user-name", 
+    tracing::debug!(target: "update-user-name", 
             executor=executor.id, 
             name=name.name, 
             by=name.by, 
@@ -122,7 +122,7 @@ pub async fn update_user_handle(
     Json(handle): Json<UpdateHandle>,
 ) -> Result<impl IntoResponse, AppError> {
     let mut tx = state.db.begin().await.map_err(|e|{
-       tracing::error!(target: "update-user-handle", 
+        tracing::error!(target: "update-user-handle", 
             error=?e, 
             executor=executor.id, 
             userhandle=handle.userhandle, 
@@ -145,7 +145,7 @@ pub async fn update_user_handle(
     if executor_row.executor_type == ExecutorType::Userbot {
         Err(AppError::ExecutorForbidden(executor_row.id))?
     }
-    if !VALID_USER_HANDLE.contains(&handle.userhandle.len()) || USER_HANDLE_REGEX.is_match(&handle.userhandle){
+    if !VALID_USER_HANDLE.contains(&handle.userhandle.len()) || !USER_HANDLE_REGEX.is_match(&handle.userhandle) {
         return Err(AppError::InvalidUserHandle(handle.userhandle))
     }
     let by = users::get_user(tx.as_mut(), handle.by).await.map_err(|e|{
@@ -162,36 +162,29 @@ pub async fn update_user_handle(
     if by.role < UserRole::User || by.role < UserRole::Moderator && handle.by != handle.id {
         Err(AppError::UserForbidden(by.id))?
     }
-    users::get_user_for_update(&state.db, handle.id).await.map_err(|e|{
-            tracing::error!(target: "update-user-handle", 
-            error=?e, 
-            executor=executor.id, 
-            userhandle=handle.userhandle, 
-            by=handle.by,
-            id=handle.id,  
-            "gotten error while getting user");
-        AppError::Internal
-    })?;
 
     let res = query_as::<_, User>( r#"
-        update users set userhandle=$1 where id=$2 
-        on conflict (userhandle) do nothing
+        update users set userhandle=$1 where id=$2
         returning id, name, userhandle, balance, role, notify_level, updated_at, created_at"#
     )
-        .bind(&handle.userhandle)
+        .bind(handle.userhandle.to_lowercase())
         .bind(handle.id)
         .fetch_optional(tx.as_mut())
         .await
-        .map_err(|e: sqlx::Error|{
-            tracing::error!(target: "update-user-handle", 
-            error=?e, 
-            executor=executor.id, 
-            userhandle=handle.userhandle, 
-            by=handle.by,
-            id=handle.id,  
-            "gotten error while updating user handle");
-        AppError::Internal
-        })?.ok_or(AppError::UserhandleTaken(handle.userhandle.clone()))?;
+        .map_err(|e: sqlx::Error| match e {
+            sqlx::Error::Database(db_err) if db_err.is_unique_violation() => 
+                AppError::UserhandleTaken(handle.userhandle.clone()),
+            e => {
+                tracing::error!(target: "update-user-handle", 
+                error=?e, 
+                executor=executor.id, 
+                userhandle=handle.userhandle, 
+                by=handle.by,
+                id=handle.id,  
+                "gotten error while updating user handle");
+                AppError::Internal
+            }
+        })?.ok_or(AppError::UserNotFound(handle.id))?;
 
     tx.commit().await.map_err(|e|{
         tracing::error!(target: "update-user-handle", 
@@ -203,7 +196,7 @@ pub async fn update_user_handle(
             "gotten error while committing transaction");
         AppError::Internal
     })?;
-     tracing::debug!(target: "update-user-handle", 
+    tracing::debug!(target: "update-user-handle", 
             executor=executor.id, 
             userhandle=handle.userhandle, 
             by=handle.by,
@@ -217,7 +210,7 @@ pub async fn update_user_handle(
 #[derive(Clone, Deserialize)]
 pub struct UpdateNotify {
     pub id: i64,
-    pub level: NotifyLevel
+    pub notify_level: NotifyLevel
 }
 
 pub async fn update_user_notify(
@@ -226,20 +219,20 @@ pub async fn update_user_notify(
     Json(notify): Json<UpdateNotify>,
 ) -> Result<impl IntoResponse, AppError> {
     let mut tx = state.db.begin().await.map_err(|e|{
-       tracing::error!(target: "update-user-notify", 
+        tracing::error!(target: "update-user-notify", 
             error=?e, 
             executor=executor.id, 
             id=notify.id,
-            level=%notify.level,
+            level=%notify.notify_level,
             "gotten error while creating transaction");
         AppError::Internal
     })?;
     let executor_row = get_executor(tx.as_mut(), executor.id).await.map_err(|e| {
-       tracing::error!(target: "update-user-notify", 
+        tracing::error!(target: "update-user-notify", 
             error=?e, 
             executor=executor.id, 
             id=notify.id,
-            level=%notify.level,
+            level=%notify.notify_level,
             "gotten error while getting executor");
         AppError::Internal
     })?.ok_or(AppError::ExecutorNotFound(executor.id))?;
@@ -249,7 +242,7 @@ pub async fn update_user_notify(
     }
 
     let res = query_as::<_, User>( "update users set notify_level=$1 where id=$2 returning id, name, userhandle, balance, role, notify_level, updated_at, created_at")
-        .bind(&notify.level)
+        .bind(&notify.notify_level)
         .bind(notify.id)
         .fetch_optional(tx.as_mut())
         .await
@@ -258,23 +251,23 @@ pub async fn update_user_notify(
                 error=?e, 
                 executor=executor.id, 
                 id=notify.id,
-                level=%notify.level,
+                level=%notify.notify_level,
                 "gotten error while updating user notify level");
             AppError::Internal
         })?.ok_or(AppError::UserNotFound(notify.id))?;
     tx.commit().await.map_err(|e|{
-       tracing::error!(target: "update-user-notify", 
+        tracing::error!(target: "update-user-notify", 
             error=?e, 
             executor=executor.id, 
             id=notify.id,
-            level=%notify.level,
+            level=%notify.notify_level,
             "gotten error while committing transaction");
         AppError::Internal
     })?;
-     tracing::debug!(target: "update-user-notify", 
+    tracing::debug!(target: "update-user-notify", 
         executor=executor.id, 
         id=notify.id,
-        level=%notify.level,
+        level=%notify.notify_level,
         "updated user notify level");
     Ok(Json(res))
 }
@@ -292,7 +285,7 @@ pub async fn update_user_role(
     Json(role): Json<UpdateRole>,
 ) -> Result<impl IntoResponse, AppError> {
     let mut tx = state.db.begin().await.map_err(|e|{
-       tracing::error!(target: "update-user-role", 
+        tracing::error!(target: "update-user-role", 
             error=?e, 
             executor=executor.id, 
             by=role.by, 
@@ -339,7 +332,7 @@ pub async fn update_user_role(
     })?.ok_or(AppError::UserNotFound(role.id))?;
 
     if executor_row.executor_type != ExecutorType::Admin &&
-         ( role.role == UserRole::Pool || 
+        (role.role == UserRole::Pool || 
             role.role >= by.role || 
             by.role < UserRole::Moderator || 
             user.role == UserRole::Pool || 
@@ -373,7 +366,7 @@ pub async fn update_user_role(
             "gotten error while committing transaction");
         AppError::Internal
     })?;
-     tracing::debug!(target: "update-user-role", 
+    tracing::debug!(target: "update-user-role", 
             executor=executor.id, 
             by=role.by, 
             id=role.id, 

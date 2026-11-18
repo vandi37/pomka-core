@@ -29,9 +29,9 @@ pub static USER_HANDLE_REGEX: Lazy<Regex> = lazy_regex!("^[a-z][a-z0-9-]*[a-z0-9
 use crate::{
     routes::{
         admins::middleware::admin_access, middleware::{access, adapter, map_executor}, users::{
-            create::create_user, delete::{delete_user, remove_user_handle}, get::{get_user_dispatcher, get_users, users_leaderboard}, update::{update_user_handle, update_user_name, update_user_notify, update_user_role},
+            create::create_user, delete::{delete_user, remove_user_handle}, get::{get_user, get_user_by_handle, get_users, users_leaderboard}, update::{update_user_handle, update_user_name, update_user_notify, update_user_role},
         },
-    }, utils::state::AppState,
+    }, utils::{router::new_router, state::AppState},
 };
 mod create;
 mod get;
@@ -41,20 +41,21 @@ mod claim_daily_reward;
 
 
 pub fn users_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
-    Router::new()
+    new_router()
         .merge(
-            Router::new()
+            new_router()
                 .route(
                     "/",
                     post(create_user).route_layer(from_fn_with_state(state.clone(), adapter)).delete(delete_user),
                 )
                 .route("/name/", patch(update_user_name))
                 .route("/userhandle/", patch(update_user_handle).delete(remove_user_handle))
-                .route("/notify/", patch(update_user_notify))
+                .route("/notify-level/", patch(update_user_notify))
                 .route("/role/", patch(update_user_role))
                 .route("/leaderboard/", get(users_leaderboard))
-                .route("/{identifier}/", get(get_user_dispatcher))
-                .route("/daily-reward/{id}/",post(claim_daily_reward::claim_daily_reward))
+                .route("/{id}/", get(get_user))
+                .route("/:{handle}/", get(get_user_by_handle))
+                .route("/{id}/daily-reward/",post(claim_daily_reward::claim_daily_reward))
                 .layer(from_fn_with_state(state.clone(), map_executor))
                 .layer(from_fn_with_state(state.clone(), access)),
         )

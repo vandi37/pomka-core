@@ -33,6 +33,7 @@ use crate::{
     },
 };
 
+#[derive(Default)]
 pub struct Pay {
     pub sender: i64,
     pub receiver: i64,
@@ -41,6 +42,7 @@ pub struct Pay {
     pub data: Option<Value>,
     pub r#type: String,
     pub allowed: bool,
+    pub disable_fee: bool,
     pub user_token: Option<String>,
     pub idempotency_key: Option<Uuid>,
 }
@@ -160,6 +162,9 @@ pub async fn pay_tx<'a>(
     };
     if sender.balance < pay.amount && sender.role != UserRole::Pool {
         return Err(TxError::InsufficientFunds);
+    }
+    if pay.disable_fee {
+        fee = 0;
     }
     let received_amount = pay
         .amount

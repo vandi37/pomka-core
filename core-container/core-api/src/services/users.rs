@@ -41,7 +41,7 @@ pub async fn get_user_by_handle<'e>(executor: impl Executor<'e, Database = Postg
     query_as::<Postgres, User>(
         "select id, name, userhandle, balance, role, notify_level, updated_at, created_at from users where userhandle = $1"
     )
-            .bind(userhandle)
+            .bind(userhandle.to_lowercase())
             .fetch_optional(executor)
             .await
 }

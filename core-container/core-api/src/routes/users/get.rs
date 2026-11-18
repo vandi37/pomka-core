@@ -47,7 +47,7 @@ pub async fn get_user_by_handle(
     Extension(executor): Extension<Executor>,
     Path(userhandle): Path<String>,
 ) -> Result<Json<User>, AppError> {
-     if !VALID_USER_HANDLE.contains(&userhandle.len()) || USER_HANDLE_REGEX.is_match(&userhandle){
+    if !VALID_USER_HANDLE.contains(&userhandle.len()) || !USER_HANDLE_REGEX.is_match(&userhandle){
         return Err(AppError::InvalidUserHandle(userhandle))
     }
     let user = users::get_user_by_handle(&state.db, &userhandle).await.map_err(|e| {
@@ -57,20 +57,6 @@ pub async fn get_user_by_handle(
     tracing::debug!(target: "get-user-by-handle", executor=executor.id, userhandle, "gotten user by handle");
     Ok(Json(user))
 }
-
-
-pub async fn get_user_dispatcher(
-    state: State<Arc<AppState>>,
-    extention: Extension<Executor>,
-    Path(identifier): Path<String>,
-) -> Result<impl IntoResponse, AppError> {
-    if let Ok(id) = identifier.parse::<i64>() {
-        get_user(state, extention, Path(id)).await
-    } else {
-        get_user_by_handle(state, extention, Path(identifier)).await
-    }
-}
-
 
 #[derive(Clone, Serialize)]
 pub struct LeaderBoardUser {
