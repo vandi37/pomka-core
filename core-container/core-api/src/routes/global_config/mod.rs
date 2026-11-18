@@ -12,7 +12,7 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-mod patch;
+mod update;
 pub mod get;
 use std::sync::Arc;
 
@@ -22,17 +22,13 @@ use axum::{
     routing::{patch, get},
 };
 
-use crate::{routes::{admins::middleware::admin_access, global_config::{get::get_daily_claim, patch::{patch_admin_fee, patch_bot_fee, patch_daily_claim, patch_reset_hour, patch_userbot_fee, patch_userbot_owner_fee, patch_userbot_user_token_fee}}}, utils::state::AppState};
+use crate::routes::global_config::update::update_global_config;
+use crate::{routes::{admins::middleware::admin_access, global_config::get::get_daily_claim}, utils::state::AppState};
 
 
 pub fn global_config_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
-        .route("/admin/", patch(patch_admin_fee))
-        .route("/bot/", patch(patch_bot_fee))
-        .route("/userbot/", patch(patch_userbot_fee))
-        .route("/userbot-user-token/", patch(patch_userbot_user_token_fee))
-        .route("/userbot-owner/", patch(patch_userbot_owner_fee))
-        .route("/daily-claim/", get(get_daily_claim).patch(patch_daily_claim))
-        .route("/reset-hour/", patch(patch_reset_hour))
+        .route("/daily-claim/", get(get_daily_claim))
+        .route("/", patch(update_global_config))
         .layer(from_fn_with_state(state, admin_access))
 }

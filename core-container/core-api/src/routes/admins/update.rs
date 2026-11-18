@@ -42,7 +42,7 @@ pub async fn update_admin(
     Json(login): Json<UpdateAdmin>,
 ) -> Result<impl IntoResponse, AppError> {
     if login.username.is_none() && login.password.is_none() {
-        Err(AppError::EmptyPatch)?
+        return Err(AppError::EmptyPatch)
     }
     let password = login.password.and_then(|p| Some(state.password_hasher_service.hash_password(&p)
         .map_err(|e| {
