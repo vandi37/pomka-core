@@ -19,20 +19,20 @@ use sqlx::{Executor, Postgres, query};
 
 #[derive(Clone)]
 pub struct Fees {
-    pub admin: i32,
-    pub bot: i32,
-    pub userbot: i32,
-    pub userbot_user_token: i32,
-    pub userbot_owner: i32,
+    pub admin_fee: i32,
+    pub bot_fee: i32,
+    pub userbot_fee: i32,
+    pub userbot_user_token_fee: i32,
+    pub userbot_owner_fee: i32,
     pub scale: i32,
 }
 #[derive(Clone, Serialize)]
 struct DecimalFees {
-    pub admin: Decimal,
-    pub bot: Decimal,
-    pub userbot: Decimal,
-    pub userbot_user_token: Decimal,
-    pub userbot_owner: Decimal,
+    pub admin_fee: Decimal,
+    pub bot_fee: Decimal,
+    pub userbot_fee: Decimal,
+    pub userbot_user_token_fee: Decimal,
+    pub userbot_owner_fee: Decimal,
 }
 
 impl Serialize for Fees {
@@ -42,11 +42,11 @@ impl Serialize for Fees {
     {
         let scale = self.scale.ilog10();
         DecimalFees {
-            admin: Decimal::new(self.admin as i64, scale as u32),
-            bot: Decimal::new(self.bot as i64, scale as u32),
-            userbot: Decimal::new(self.userbot as i64, scale as u32),
-            userbot_user_token: Decimal::new(self.userbot_user_token as i64, scale as u32),
-            userbot_owner: Decimal::new(self.userbot_owner as i64, scale as u32),
+            admin_fee: Decimal::new(self.admin_fee as i64, scale as u32),
+            bot_fee: Decimal::new(self.bot_fee as i64, scale as u32),
+            userbot_fee: Decimal::new(self.userbot_fee as i64, scale as u32),
+            userbot_user_token_fee: Decimal::new(self.userbot_user_token_fee as i64, scale as u32),
+            userbot_owner_fee: Decimal::new(self.userbot_owner_fee as i64, scale as u32),
         }
         .serialize(serializer)
     }
@@ -58,11 +58,11 @@ pub async fn get_fees<'e>(
         .fetch_one(executor)
         .await?;
     let fees = Fees {
-        admin: fees.admin_fee,
-        bot: fees.bot_fee,
-        userbot: fees.userbot_fee,
-        userbot_user_token: fees.userbot_user_token_fee,
-        userbot_owner: fees.userbot_owner_fee,
+        admin_fee: fees.admin_fee,
+        bot_fee: fees.bot_fee,
+        userbot_fee: fees.userbot_fee,
+        userbot_user_token_fee: fees.userbot_user_token_fee,
+        userbot_owner_fee: fees.userbot_owner_fee,
         scale: fees.scale,
     };
     Ok(fees)

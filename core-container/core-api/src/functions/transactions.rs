@@ -117,9 +117,9 @@ pub async fn pay_tx<'a>(
     user_list.sort_by_key(|&(idx, _)| idx);
     let [(_, sender), (_, receiver), (_, pool)] = user_list;
     let fees = get_fees(tx.as_mut()).await.map_err(TxError::Sqlx)?;
-    let mut fee = fees.bot;
+    let mut fee = fees.bot_fee;
     if exec.admin.is_some() {
-        fee = fees.admin
+        fee = fees.admin_fee
     }
     let mut user_token_id = None;
     if let Some(u) = exec.userbot {
@@ -131,9 +131,9 @@ pub async fn pay_tx<'a>(
             .await
             .map_err(TxError::Sqlx)?;
         if pay.allowed {
-            fee = fees.userbot
+            fee = fees.userbot_fee
         } else if userbot.owner_id == sender.id {
-            fee = fees.userbot_owner
+            fee = fees.userbot_owner_fee
         } else if let Some(token) = pay.user_token.and_then(|t| user_tokens.verify(&t)) {
             query!(
                 r#"select 
@@ -153,7 +153,7 @@ pub async fn pay_tx<'a>(
             .map_err(TxError::Sqlx)?
             .ok_or(TxError::Forbidden(exec.id))?;
             user_token_id = Some(token);
-            fee = fees.userbot_user_token
+            fee = fees.userbot_user_token_fee
         } else {
             return Err(TxError::Forbidden(exec.id));
         }

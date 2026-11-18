@@ -23,11 +23,6 @@ use sqlx::query;
 use crate::{routes::admins::Admin, utils::error::AppError, utils::state::AppState};
 
 #[derive(Deserialize)]
-pub struct Fee {
-    pub fee: Decimal,
-}
-
-#[derive(Deserialize)]
 pub struct UpdateGlobalConfig {
     pub admin_fee: Option<Decimal>,
     pub bot_fee: Option<Decimal>,

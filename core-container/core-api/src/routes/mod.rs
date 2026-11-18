@@ -23,7 +23,7 @@ use std::sync::Arc;
 
 use axum::{
     Json, Router,
-    middleware::{from_fn, from_fn_with_state},
+    middleware::from_fn,
     routing::get,
 };
 use serde::{Deserialize, Serialize};
@@ -31,10 +31,7 @@ use serde_json::json;
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::{
-    routes::{
-        global_config::get::get_fees,
-        middleware::{access, logging, map_executor},
-    },
+    routes::middleware::logging,
     utils::state::AppState,
 };
 
@@ -66,12 +63,6 @@ pub fn router(state: Arc<AppState>) -> Router {
         .nest(
             "/global-config/",
             global_config::global_config_router(state.clone()),
-        )
-        .route(
-            "/fees/",
-            get(get_fees)
-                .route_layer(from_fn_with_state(state.clone(), map_executor))
-                .route_layer(from_fn_with_state(state.clone(), access)),
         )
         .layer(cors)
         .layer(from_fn(logging))

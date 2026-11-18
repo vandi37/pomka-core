@@ -16,30 +16,32 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State, response::IntoResponse};
+use serde::Serialize;
 
-use crate::{ utils::error::AppError, routes::Executor, services::global_config, utils::state::AppState};
+use crate::{ routes::Executor, services::global_config::{self, DailyClaim, Fees}, utils::{error::AppError, state::AppState}};
 
-pub async fn get_fees(
+#[derive(Serialize)]
+struct GlobalConfig {
+    #[serde(flatten)]
+    fees: Fees,
+    #[serde(flatten)]
+    daily_claim: DailyClaim,
+}
+
+pub async fn get_global_config(
     State(state): State<Arc<AppState>>,
     Extension(executor): Extension<Executor>,
 ) -> Result<impl IntoResponse, AppError> {
     let fees = global_config::get_fees(&state.db).await.map_err(|e| {
-            tracing::error!(target:"get-fees", error=?e, executor=executor.id, "gotten error while getting fees");
+            tracing::error!(target:"get-global-config", error=?e, executor=executor.id, "gotten error while getting fees");
             AppError::Internal
         })?;
-
-    tracing::debug!(target:"get-fees", executor=executor.id, "gotten fees");
-    Ok(Json(fees))
-}
-
-pub async fn get_daily_claim(
-    State(state): State<Arc<AppState>>,
-    Extension(executor): Extension<Executor>,
-) -> Result<impl IntoResponse, AppError> {
+    
     let daily_claim = global_config::get_daily_claim(&state.db).await.map_err(|e| {
-            tracing::error!(target:"get-daily-daily_claim", error=?e, executor=executor.id, "gotten error while getting daily claim");
+            tracing::error!(target:"get-global-config", error=?e, executor=executor.id, "gotten error while getting daily claim");
             AppError::Internal
         })?;
-    tracing::debug!(target:"get-daily-daily_claim", executor=executor.id, "gotten daily claim data");
-    Ok(Json(daily_claim))
+
+    tracing::debug!(target:"get-global-config", executor=executor.id, "gotten global config");
+    Ok(Json(GlobalConfig{fees, daily_claim}))
 }

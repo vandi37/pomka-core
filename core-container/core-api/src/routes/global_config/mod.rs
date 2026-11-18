@@ -19,16 +19,16 @@ use std::sync::Arc;
 use axum::{
     Router,
     middleware::from_fn_with_state,
-    routing::{patch, get},
+    routing::get,
 };
 
-use crate::routes::global_config::update::update_global_config;
-use crate::{routes::{admins::middleware::admin_access, global_config::get::get_daily_claim}, utils::state::AppState};
-
+use crate::routes::{global_config::{get::get_global_config, update::update_global_config}, middleware::{access, map_executor}};
+use crate::{routes::admins::middleware::admin_access, utils::state::AppState};
 
 pub fn global_config_router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
-        .route("/daily-claim/", get(get_daily_claim))
-        .route("/", patch(update_global_config))
-        .layer(from_fn_with_state(state, admin_access))
+        .route("/", get(get_global_config)
+            .route_layer(from_fn_with_state(state.clone(), map_executor))
+            .route_layer(from_fn_with_state(state.clone(), access))
+            .patch(update_global_config).route_layer(from_fn_with_state(state, admin_access)))
 }
